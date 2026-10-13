@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Aylanuvchi doiralar bilan chizish</title>
+<meta name="theme-color" content="#0a0a0c">
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root{
+  --bg:#0a0a0c; --fg:#ededee; --mute:#8d8d94; --accent:#ff6652;
+  --panel:#15151a; --line:#2a2a31; --btn:#1d1d23;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){--bg:#0a0a0c;--fg:#ededee;--mute:#8d8d94;--panel:#15151a;--line:#2a2a31;--btn:#1d1d23}
+}
+:root[data-theme="dark"]{--bg:#0a0a0c;--fg:#ededee;--mute:#8d8d94;--panel:#15151a;--line:#2a2a31;--btn:#1d1d23}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{display:flex;flex-direction:column;align-items:center;gap:10px;padding:0 0 22px}
+.stage{
+  position:relative;
+  width:min(100vw, calc((100vh - 220px) * 0.5625), 560px);
+  min-width:260px;aspect-ratio:9/16;background:var(--bg);
+}
+canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.ctl{width:min(100vw,560px);padding:0 14px;display:flex;flex-direction:column;gap:10px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+button,.btn{
+  appearance:none;border:1px solid var(--line);background:var(--btn);color:var(--fg);
+  border-radius:999px;padding:10px 15px;font:500 14px/1 system-ui,sans-serif;cursor:pointer;white-space:nowrap
+}
+button:disabled{opacity:.45;cursor:default}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.on{border-color:var(--accent);color:var(--accent)}
+button.main{background:var(--accent);border-color:var(--accent);color:#1a0b08;font-weight:650}
+input[type=range]{flex:1;accent-color:var(--accent);min-width:90px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
+.chips button{flex:0 0 auto}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.seg button{border:0;border-radius:0;background:transparent;padding:9px 13px}
+.seg button.on{background:var(--btn)}
+.lbl{font-size:12px;color:var(--mute)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px;display:none;flex-direction:column;gap:10px;font-size:13px;color:#c9c9ce}
+.panel.open{display:flex}
+.panel p{margin:0;line-height:1.45}
+textarea{width:100%;min-height:150px;background:#0e0e12;color:#e6e6e8;border:1px solid var(--line);border-radius:10px;padding:10px;font:12px/1.4 ui-monospace,Menlo,Consolas,monospace;resize:vertical}
+.status{min-height:1.3em;font-size:13px;color:var(--accent);line-height:1.35}
+.status.ok{color:#9ad6a8}
+.hide-file{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;pointer-events:none}
+#result{display:none;flex-direction:column;gap:8px}
+#result video{width:100%;max-height:60vh;border-radius:12px;background:#000}
+#result a{color:var(--accent);font-size:13px}
+.hint{font-size:12px;color:var(--mute);line-height:1.45}
+</style>
+</head>
+<body>
+<main>
+  <div class="stage" id="stage"><canvas id="cv"></canvas></div>
+
+  <div class="ctl">
+    <div class="row">
+      <button id="play" aria-label="Pauza / davom">⏸</button>
+      <button id="restart" aria-label="Qaytadan">↻</button>
+      <button id="speed">1×</button>
+      <input type="range" id="scrub" min="0" max="1000" value="0" aria-label="Vaqt">
+    </div>
+
+    <div class="row">
+      <button id="upload" class="main">📷 Rasm yuklash</button>
+      <button id="rec">🎬 Videoga saqlash</button>
+    </div>
+    <input class="hide-file" type="file" id="file" accept="image/*">
+    <div class="status" id="status"></div>
+
+    <div class="row" id="traceRow" style="display:none">
+      <span class="lbl">Rejim</span>
+      <div class="seg" id="seg">
+        <button data-m="auto" class="on">Avto</button>
+        <button data-m="color">Ranglar</button>
+        <button data-m="edge">Chiziq</button>
+      </div>
+      <span class="lbl">Detal</span>
+      <input type="range" id="detail" min="1000" max="5000" step="100" value="3200" aria-label="Detal">
+    </div>
+    <div class="hint" id="traceHint" style="display:none">Ranglar — bayroq, logo, multfilm uchun. Chiziq — foto, portret, har qanday rasm uchun (konturlarni topadi). Detal — chiziq mayda-mayda ko'proq bo'lishi.</div>
+
+    <div class="chips" id="chips"></div>
+
+    <div class="row"><button id="customBtn">＋ Shakl bilan yasash (JSON)</button></div>
+    <div class="panel" id="panel">
+      <p>Shakllar: rect, circle, star, crescent, poly. Koordinatalar markazdan, y pastga qarab o'sadi.</p>
+      <textarea id="json" spellcheck="false"></textarea>
+      <div class="row"><button id="apply">Chizish</button></div>
+    </div>
+    <div id="result"></div>
+  </div>
+</main>
+
+<script>
+"use strict";
+const TAU = Math.PI * 2;
+const M = 8192;                  // samples along the curve (power of two)
+const KMAX = 2000;
+const STAGES_FLAG = [1, 3, 10, 50, 200, 500, 1000];
+const STAGES_FREE = [1, 3, 10, 50, 200, 500, 1000, 2000];
+const INTRO = 1300, STAGE_T = 3700, DRAW_T = 3000, TRANS = 1500, HOLD_END = 1500;
+const SHOW = 30;
+const RED = "#ff4b3a", DIM = "#b0473f", TEAL = "#86d4bd", AMBER = "#d7ae65";
+const SERIF = 'Georgia, "Times New Roman", serif';
+const SANS = '"DejaVu Sans", Verdana, system-ui, sans-serif';
+
+/* ---------- shape builders (units, y points down) ---------- */
+function circlePts(cx, cy, r, n = 120) {
+  const p = [];
+  for (let i = 0; i < n; i++) { const a = i / n * TAU; p.push([cx + r * Math.cos(a), cy + r * Math.sin(a)]); }
+  return p;
+}
+function starPts(cx, cy, R, rot = -Math.PI / 2, n = 5, ratio) {
+  const r = R * (ratio || Math.cos(TAU / n) / Math.cos(Math.PI / n));
+  const p = [];
+  for (let i = 0; i < 2 * n; i++) {
+    const a = rot + i * Math.PI / n, q = i % 2 ? r : R;
+    p.push([cx + q * Math.cos(a), cy + q * Math.sin(a)]);
+  }
+  return p;
+}
+function crescentPts(cx, cy, R, r, d, rot = 0) {
+  const x = (d * d + R * R - r * r) / (2 * d);
+  const y = Math.sqrt(Math.max(R * R - x * x, 0));
+  const al = Math.atan2(y, x);
+  const p = [];
+  const n1 = 90, n2 = 70;
+  for (let i = 0; i <= n1; i++) {
+    const f = -al + (al - TAU + al) * (i / n1);
+    p.push([R * Math.cos(f), R * Math.sin(f)]);
+  }
+  const b2 = Math.atan2(y, x - d), b1 = Math.atan2(-y, x - d) + TAU;
+  for (let i = 1; i < n2; i++) {
+    const f = b2 + (b1 - b2) * (i / n2);
+    p.push([d + r * Math.cos(f), r * Math.sin(f)]);
+  }
+  const c = Math.cos(rot), s = Math.sin(rot);
+  return p.map(([u, v]) => [cx + u * c - v * s, cy + u * s + v * c]);
+}
+function shapePts(s) {
+  switch (s.k) {
+    case "rect": return [[s.x, s.y], [s.x + s.w, s.y], [s.x + s.w, s.y + s.h], [s.x, s.y + s.h]];
+    case "circle": return circlePts(s.cx, s.cy, s.r);
+    case "star": return starPts(s.cx, s.cy, s.R, s.rot === undefined ? -Math.PI / 2 : s.rot, s.n || 5, s.ratio);
+    case "crescent": return crescentPts(s.cx, s.cy, s.R, s.r, s.d, s.rot || 0);
+    case "poly": return s.pts.map(p => [p[0], p[1]]);
+  }
+  throw new Error("Noma'lum shakl: " + s.k);
+}
+
+/* ---------- presets ---------- */
+const R_ = (x, y, w, h, color) => ({ k: "rect", x, y, w, h, color });
+const FLAGS = [
+  { name: "Turkey", w: 3, h: 2, bg: "#E30A17", desc: "a crescent, a star, one line of spinning circles",
+    shapes: [
+      { k: "crescent", cx: -0.5, cy: 0, R: 0.5, r: 0.4, d: 0.125, color: "#fff" },
+      { k: "star", cx: 0.12, cy: 0, R: 0.25, rot: Math.PI, color: "#fff" }] },
+  { name: "Japan", w: 3, h: 2, bg: "#ffffff", desc: "one disc, one line of spinning circles",
+    shapes: [{ k: "circle", cx: 0, cy: 0, r: 0.6, color: "#BC002D" }] },
+  { name: "Poland", w: 8, h: 5, bg: "#ffffff", desc: "two stripes, one line of spinning circles",
+    shapes: [R_(-4, 0, 8, 2.5, "#DC143C")] },
+  { name: "Switzerland", w: 32, h: 32, bg: "#DA291C", desc: "a cross, one line of spinning circles",
+    shapes: [{ k: "poly", color: "#fff", pts: [[-3,-10],[3,-10],[3,-3],[10,-3],[10,3],[3,3],[3,10],[-3,10],[-3,3],[-10,3],[-10,-3],[-3,-3]] }] },
+  { name: "Bangladesh", w: 10, h: 6, bg: "#006A4E", desc: "one disc, one line of spinning circles",
+    shapes: [{ k: "circle", cx: -0.5, cy: 0, r: 1.8, color: "#F42A41" }] },
+  { name: "Germany", w: 5, h: 3, bg: "#DD0000", desc: "three stripes, one line of spinning circles",
+    shapes: [R_(-2.5, -1.5, 5, 1, "#000000"), R_(-2.5, 0.5, 5, 1, "#FFCE00")] },
+  { name: "France", w: 3, h: 2, bg: "#ffffff", desc: "three stripes, one line of spinning circles",
+    shapes: [R_(-1.5, -1, 1, 2, "#0055A4"), R_(0.5, -1, 1, 2, "#EF4135")] },
+  { name: "Ukraine", w: 3, h: 2, bg: "#FFD500", desc: "two stripes, one line of spinning circles",
+    shapes: [R_(-1.5, -1, 3, 1, "#005BBB")] },
+  { name: "Vietnam", w: 3, h: 2, bg: "#DA251D", desc: "a star, one line of spinning circles",
+    shapes: [{ k: "star", cx: 0, cy: 0, R: 0.667, color: "#FFFF00" }] },
+  { name: "Denmark", w: 37, h: 28, bg: "#C8102E", desc: "a cross, one line of spinning circles",
+    shapes: [{ k: "poly", color: "#fff", pts: [[-18.5,-2],[-6.5,-2],[-6.5,-14],[-2.5,-14],[-2.5,-2],[18.5,-2],[18.5,2],[-2.5,2],[-2.5,14],[-6.5,14],[-6.5,2],[-18.5,2]] }] },
+  { name: "Palau", w: 8, h: 5, bg: "#4AADD6", desc: "one disc, one line of spinning circles",
+    shapes: [{ k: "circle", cx: -0.4, cy: 0, r: 2, color: "#FFDE00" }] },
+  (function () {
+    const sh = [
+      R_(-1, -0.5, 2, 0.3, "#0099B5"), R_(-1, -0.2, 2, 0.02, "#CE1126"),
+      R_(-1, 0.18, 2, 0.02, "#CE1126"), R_(-1, 0.2, 2, 0.3, "#1EB53A"),
+      { k: "crescent", cx: -0.7, cy: -0.35, R: 0.12, r: 0.1, d: 0.035, color: "#fff" }];
+    [[3, -0.45, -0.43], [4, -0.485, -0.36], [5, -0.52, -0.29]].forEach(([n, x0, y]) => {
+      for (let i = 0; i < n; i++) sh.push({ k: "star", cx: x0 + i * 0.07, cy: y, R: 0.028, color: "#fff" });
+    });
+    return { name: "Uzbekistan", w: 2, h: 1, bg: "#ffffff", desc: "a crescent, twelve stars, one line of spinning circles", shapes: sh };
+  })()
+];
+
+/* ---------- build the single closed curve + Fourier series ---------- */
+let F = null, STAGES = STAGES_FLAG, TOTAL = 0;
+const cosT = new Float64Array(M), sinT = new Float64Array(M);
+for (let i = 0; i < M; i++) { cosT[i] = Math.cos(TAU * i / M); sinT[i] = Math.sin(TAU * i / M); }
+
+function buildFlag(flag) {
+  let raw;
+  if (flag.raw) raw = flag.raw;
+  else {
+    const polys = flag.shapes.map(s => ({ color: s.color, pts: shapePts(s) }));
+    flag._polys = polys;
+    const hw = flag.w / 2, hh = flag.h / 2;
+    raw = [[hw, hh, 0], [hw, -hh, 0], [-hw, -hh, 0], [-hw, 0, 0]];
+    let cur = [-hw, 0];
+    for (const p of polys) {
+      let bi = 0, bd = Infinity;
+      p.pts.forEach((q, i) => { const d = (q[0] - cur[0]) ** 2 + (q[1] - cur[1]) ** 2; if (d < bd) { bd = d; bi = i; } });
+      const n = p.pts.length;
+      for (let j = 0; j <= n; j++) { const q = p.pts[(bi + j) % n]; raw.push([q[0], q[1], 1]); }
+      cur = p.pts[bi];
+    }
+    raw.push([-hw, 0, 1], [-hw, hh, 0], [hw, hh, 0]);
+  }
+  const segLen = [];
+  let L = 0;
+  for (let i = 0; i < raw.length - 1; i++) {
+    const l = Math.hypot(raw[i + 1][0] - raw[i][0], raw[i + 1][1] - raw[i][1]);
+    segLen.push(l); L += l;
+  }
+  const X = new Float64Array(M), Y = new Float64Array(M), lab = new Uint8Array(M);
+  let seg = 0, acc = 0;
+  for (let i = 0; i < M; i++) {
+    const s = i * L / M;
+    while (seg < segLen.length - 1 && acc + segLen[seg] < s) { acc += segLen[seg]; seg++; }
+    const t = segLen[seg] > 0 ? Math.min(1, (s - acc) / segLen[seg]) : 0;
+    X[i] = raw[seg][0] + (raw[seg + 1][0] - raw[seg][0]) * t;
+    Y[i] = raw[seg][1] + (raw[seg + 1][1] - raw[seg][1]) * t;
+    lab[i] = raw[seg + 1][2];
+  }
+  const kmax = flag.free ? KMAX : 1000;
+  const ax = new Float64Array(KMAX + 1), bx = new Float64Array(KMAX + 1);
+  const ay = new Float64Array(KMAX + 1), by = new Float64Array(KMAX + 1);
+  let sx = 0, sy = 0;
+  for (let i = 0; i < M; i++) { sx += X[i]; sy += Y[i]; }
+  const a0x = sx / M, a0y = sy / M;
+  for (let k = 1; k <= kmax; k++) {
+    let p = 0, q = 0, r = 0, s = 0;
+    for (let i = 0; i < M; i++) {
+      const idx = (k * i) & (M - 1), c = cosT[idx], sn = sinT[idx];
+      p += X[i] * c; q += X[i] * sn; r += Y[i] * c; s += Y[i] * sn;
+    }
+    ax[k] = 2 * p / M; bx[k] = 2 * q / M; ay[k] = 2 * r / M; by[k] = 2 * s / M;
+  }
+  flag._d = { X, Y, lab, ax, bx, ay, by, a0x, a0y, stage: {} };
+  return flag;
+}
+
+function stageData(N) {
+  const D = F._d;
+  if (D.stage[N]) return D.stage[N];
+  const xs = new Float64Array(M).fill(D.a0x), ys = new Float64Array(M).fill(D.a0y);
+  for (let k = 1; k <= N; k++) {
+    const a = D.ax[k], b = D.bx[k], c = D.ay[k], d = D.by[k];
+    for (let i = 0; i < M; i++) {
+      const idx = (k * i) & (M - 1), co = cosT[idx], si = sinT[idx];
+      xs[i] += a * co + b * si; ys[i] += c * co + d * si;
+    }
+  }
+  let num = 0;
+  for (let i = 0; i < M; i++) num += (xs[i] - D.X[i]) ** 2 + (ys[i] - D.Y[i]) ** 2;
+  const err = 100 * Math.sqrt(num / M) / F.h;
+  const mk = (A, B) => {
+    const arr = [];
+    for (let k = 1; k <= N; k++) arr.push({ k, R: Math.hypot(A[k], B[k]), ph: Math.atan2(B[k], A[k]) });
+    arr.sort((u, v) => v.R - u.R);
+    return arr.slice(0, SHOW);
+  };
+  return (D.stage[N] = { xs, ys, err, cx: mk(D.ax, D.bx), cy: mk(D.ay, D.by) });
+}
+
+/* ---------- image analysis ---------- */
+function rasterize(img, maxSide) {
+  const ar = img.naturalWidth / img.naturalHeight;
+  let W, H;
+  if (ar >= 1) { W = maxSide; H = Math.max(8, Math.round(maxSide / ar)); }
+  else { H = maxSide; W = Math.max(8, Math.round(maxSide * ar)); }
+  const c = document.createElement("canvas"); c.width = W; c.height = H;
+  const g = c.getContext("2d", { willReadFrequently: true });
+  g.fillStyle = "#fff"; g.fillRect(0, 0, W, H);
+  g.drawImage(img, 0, 0, W, H);
+  return { W, H, d: g.getImageData(0, 0, W, H).data };
+}
+const hex = p => "#" + [p.r, p.g, p.b].map(v => Math.round(v).toString(16).padStart(2, "0")).join("");
+
+/* Mode 1: flat colour regions -> outlines (flags, logos, cartoons) */
+function traceColors(img, name, force) {
+  const { W, H, d } = rasterize(img, 260), n = W * H;
+  const hist = new Map();
+  for (let i = 0; i < n; i++) {
+    const r = d[i * 4], gg = d[i * 4 + 1], b = d[i * 4 + 2];
+    const key = ((r >> 5) << 6) | ((gg >> 5) << 3) | (b >> 5);
+    let e = hist.get(key);
+    if (!e) { e = { c: 0, r: 0, g: 0, b: 0 }; hist.set(key, e); }
+    e.c++; e.r += r; e.g += gg; e.b += b;
+  }
+  const arr = [...hist.values()].map(e => ({ c: e.c, r: e.r / e.c, g: e.g / e.c, b: e.b / e.c })).sort((a, b) => b.c - a.c);
+  const dist = (p, q) => Math.hypot(p.r - q.r, p.g - q.g, p.b - q.b);
+  const pal = [];
+  for (const e of arr) {
+    if (pal.length >= 7 || e.c < n * 0.012) break;
+    if (pal.every(p => dist(p, e) > 80)) pal.push(e);
+  }
+  if (pal.length < 2) throw new Error("Rangli joylar topilmadi");
+  if (!force && pal.length >= 7) return null;       // photo-like: let caller use edges
+  let L = new Uint8Array(n);
+  for (let i = 0; i < n; i++) {
+    const px = { r: d[i * 4], g: d[i * 4 + 1], b: d[i * 4 + 2] };
+    let bi = 0, bd = Infinity;
+    pal.forEach((p, j) => { const dd = dist(p, px); if (dd < bd) { bd = dd; bi = j; } });
+    L[i] = bi;
+  }
+  const L2 = L.slice();
+  const cnt = new Uint8Array(pal.length);
+  for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) {
+    cnt.fill(0);
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) cnt[L[(y + dy) * W + x + dx]]++;
+    let best = L[y * W + x];
+    for (let j = 0; j < pal.length; j++) if (cnt[j] > cnt[best]) best = j;
+    L2[y * W + x] = best;
+  }
+  L = L2;
+  const comp = new Int32Array(n).fill(-1), comps = [];
+  for (let i = 0; i < n; i++) {
+    if (comp[i] >= 0) continue;
+    const id = comps.length, col = L[i], st = [i]; comp[i] = id; let size = 0;
+    while (st.length) {
+      const p = st.pop(); size++;
+      const x = p % W, y = (p - x) / W;
+      if (x > 0 && comp[p - 1] < 0 && L[p - 1] === col) { comp[p - 1] = id; st.push(p - 1); }
+      if (x < W - 1 && comp[p + 1] < 0 && L[p + 1] === col) { comp[p + 1] = id; st.push(p + 1); }
+      if (y > 0 && comp[p - W] < 0 && L[p - W] === col) { comp[p - W] = id; st.push(p - W); }
+      if (y < H - 1 && comp[p + W] < 0 && L[p + W] === col) { comp[p + W] = id; st.push(p + W); }
+    }
+    comps.push({ id, col, size, start: i });
+  }
+  let bg = comps[0];
+  comps.forEach(c => { if (c.size > bg.size) bg = c; });
+  const DX = [1, 1, 0, -1, -1, -1, 0, 1], DY = [0, 1, 1, 1, 0, -1, -1, -1];
+  const dirIdx = (vx, vy) => { for (let i = 0; i < 8; i++) if (DX[i] === vx && DY[i] === vy) return i; return 0; };
+  const fh = 2, fw = 2 * W / H;
+  const shapes = [];
+  for (const cp of comps) {
+    if (cp === bg || cp.size < n * 0.0015) continue;
+    const sx = cp.start % W, sy = (cp.start - sx) / W;
+    const inC = (x, y) => x >= 0 && y >= 0 && x < W && y < H && comp[y * W + x] === cp.id;
+    const pts = [[sx, sy]];
+    let cx = sx, cy = sy, bd = 4;
+    for (let step = 0; step < 80000; step++) {
+      let f = -1;
+      for (let i = 1; i <= 8; i++) { const di = (bd + i) % 8; if (inC(cx + DX[di], cy + DY[di])) { f = di; break; } }
+      if (f < 0) break;
+      const nx = cx + DX[f], ny = cy + DY[f], pv = (f + 7) % 8;
+      bd = dirIdx(cx + DX[pv] - nx, cy + DY[pv] - ny);
+      cx = nx; cy = ny;
+      if (cx === sx && cy === sy) break;
+      pts.push([cx, cy]);
+    }
+    if (pts.length < 4) continue;
+    const simp = rdpClosed(pts, 0.9);
+    if (simp.length < 3) continue;
+    shapes.push({ k: "poly", color: hex(pal[cp.col]),
+      pts: simp.map(([px, py]) => [(px + 0.5) / W * fw - fw / 2, (py + 0.5) / H * fh - fh / 2]) });
+  }
+  if (!shapes.length) throw new Error("Kontur topilmadi");
+  return { name, title: "Drawing " + name, w: fw, h: fh, bg: hex(pal[bg.col]), img, free: true,
+    desc: "color regions, one line of spinning circles", shapes };
+}
+function rdp(pts, eps) {
+  if (pts.length < 3) return pts.slice();
+  const [x1, y1] = pts[0], [x2, y2] = pts[pts.length - 1];
+  const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy) || 1;
+  let md = -1, mi = 0;
+  for (let i = 1; i < pts.length - 1; i++) {
+    const dd = Math.abs(dy * pts[i][0] - dx * pts[i][1] + x2 * y1 - y2 * x1) / len;
+    if (dd > md) { md = dd; mi = i; }
+  }
+  if (md <= eps) return [pts[0], pts[pts.length - 1]];
+  return rdp(pts.slice(0, mi + 1), eps).slice(0, -1).concat(rdp(pts.slice(mi), eps));
+}
+function rdpClosed(pts, eps) {
+  let fi = 0, fd = -1;
+  for (let i = 1; i < pts.length; i++) {
+    const dd = (pts[i][0] - pts[0][0]) ** 2 + (pts[i][1] - pts[0][1]) ** 2;
+    if (dd > fd) { fd = dd; fi = i; }
+  }
+  const a = rdp(pts.slice(0, fi + 1), eps), b = rdp(pts.slice(fi).concat([pts[0]]), eps);
+  return a.slice(0, -1).concat(b.slice(0, -1));
+}
+
+/* Mode 2: edges of anything -> one long line (photos, portraits, sketches) */
+function traceEdges(img, name, target) {
+  const { W, H, d } = rasterize(img, 300), n = W * H;
+  let gray = new Float32Array(n);
+  for (let i = 0; i < n; i++) gray[i] = 0.299 * d[i * 4] + 0.587 * d[i * 4 + 1] + 0.114 * d[i * 4 + 2];
+  // 3x3 binomial blur
+  const bl = new Float32Array(n);
+  for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) {
+    const i = y * W + x;
+    bl[i] = (4 * gray[i] + 2 * (gray[i - 1] + gray[i + 1] + gray[i - W] + gray[i + W]) +
+      gray[i - W - 1] + gray[i - W + 1] + gray[i + W - 1] + gray[i + W + 1]) / 16;
+  }
+  const mag = new Float32Array(n), dir = new Uint8Array(n);
+  for (let y = 2; y < H - 2; y++) for (let x = 2; x < W - 2; x++) {
+    const i = y * W + x;
+    const gx = (bl[i - W + 1] + 2 * bl[i + 1] + bl[i + W + 1]) - (bl[i - W - 1] + 2 * bl[i - 1] + bl[i + W - 1]);
+    const gy = (bl[i + W - 1] + 2 * bl[i + W] + bl[i + W + 1]) - (bl[i - W - 1] + 2 * bl[i - W] + bl[i - W + 1]);
+    mag[i] = Math.hypot(gx, gy);
+    let deg = (Math.atan2(gy, gx) * 180 / Math.PI + 180) % 180;
+    dir[i] = deg < 22.5 || deg >= 157.5 ? 0 : deg < 67.5 ? 1 : deg < 112.5 ? 2 : 3;
+  }
+  const OFF = [[1, 0], [1, 1], [0, 1], [1, -1]];
+  const cand = new Uint8Array(n), list = [];
+  for (let y = 2; y < H - 2; y++) for (let x = 2; x < W - 2; x++) {
+    const i = y * W + x, m = mag[i];
+    if (m < 6) continue;
+    const [ox, oy] = OFF[dir[i]];
+    if (m >= mag[(y + oy) * W + x + ox] && m >= mag[(y - oy) * W + x - ox]) { cand[i] = 1; list.push(i); }
+  }
+  if (list.length < 30) throw new Error("Chiziqlar topilmadi — rasm juda tekis");
+  const N8 = [-W - 1, -W, -W + 1, -1, 1, W - 1, W, W + 1];
+  function hyst(hi) {
+    const lo = hi * 0.45, keep = new Uint8Array(n), st = [];
+    for (const i of list) if (mag[i] >= hi) { keep[i] = 1; st.push(i); }
+    while (st.length) {
+      const p = st.pop();
+      for (const o of N8) {
+        const q = p + o;
+        if (cand[q] && !keep[q] && mag[q] >= lo) { keep[q] = 1; st.push(q); }
+      }
+    }
+    // drop tiny fragments
+    const seen = new Uint8Array(n), out = [];
+    for (const s0 of list) {
+      if (!keep[s0] || seen[s0]) continue;
+      const comp = [s0]; seen[s0] = 1;
+      for (let a = 0; a < comp.length; a++) {
+        const p = comp[a];
+        for (const o of N8) { const q = p + o; if (keep[q] && !seen[q]) { seen[q] = 1; comp.push(q); } }
+      }
+      if (comp.length >= 10) for (const c of comp) out.push(c);
+    }
+    return out;
+  }
+  let hi = 0;
+  for (const i of list) if (mag[i] > hi) hi = mag[i];
+  const base = Math.min(14, hi * 0.3);
+  let best = hyst(base);
+  if (best.length > target) {
+    let a = base, b = hi;
+    for (let it = 0; it < 12; it++) {
+      const mid = (a + b) / 2, r = hyst(mid);
+      if (r.length > target) a = mid; else { b = mid; best = r; }
+    }
+  }
+  if (best.length < 30) throw new Error("Chiziqlar topilmadi");
+  // nearest-neighbour walk -> one continuous path
+  const px = new Float32Array(best.length), py = new Float32Array(best.length);
+  best.forEach((i, k) => { px[k] = i % W; py[k] = (i - (i % W)) / W; });
+  let cnt = best.length, cur = 0;
+  for (let k = 1; k < cnt; k++) if (py[k] < py[cur] || (py[k] === py[cur] && px[k] < px[cur])) cur = k;
+  const order = [];
+  while (cnt > 0) {
+    order.push([px[cur], py[cur]]);
+    px[cur] = px[cnt - 1]; py[cur] = py[cnt - 1]; cnt--;
+    if (!cnt) break;
+    const lx = order[order.length - 1][0], ly = order[order.length - 1][1];
+    let bi = 0, bd = Infinity;
+    for (let k = 0; k < cnt; k++) {
+      const dx = px[k] - lx, dy = py[k] - ly, dd = dx * dx + dy * dy;
+      if (dd < bd) { bd = dd; bi = k; if (dd <= 1) break; }
+    }
+    cur = bi;
+  }
+  const fh = 2, fw = 2 * W / H;
+  const raw = order.map((p, k) => {
+    const lab = k && Math.hypot(p[0] - order[k - 1][0], p[1] - order[k - 1][1]) > 2.3 ? 2 : 1;
+    return [(p[0] + 0.5) / W * fw - fw / 2, (p[1] + 0.5) / H * fh - fh / 2, lab];
+  });
+  raw[0][2] = 1;
+  raw.push([raw[0][0], raw[0][1], 2]);
+  return { name, title: "Drawing " + name, w: fw, h: fh, bg: "#ffffff", img, free: true, raw, shapes: [],
+    desc: "edges of a picture, one line of spinning circles" };
+}
+
+/* ---------- canvas + text ---------- */
+const cv = document.getElementById("cv"), ctx = cv.getContext("2d");
+const stageEl = document.getElementById("stage");
+let kScale = 1, recording = false;
+function resize() {
+  if (recording) return;
+  const w = stageEl.clientWidth, dpr = Math.min(window.devicePixelRatio || 1, 2);
+  cv.width = Math.round(w * dpr); cv.height = Math.round(w * 16 / 9 * dpr);
+  kScale = cv.width / 720;
+}
+new ResizeObserver(resize).observe(stageEl);
+
+const rgba = (h, a) => { const v = parseInt(h.slice(1), 16); return `rgba(${v >> 16},${(v >> 8) & 255},${v & 255},${a})`; };
+const lerp = (a, b, t) => a + (b - a) * t;
+const smooth = t => t * t * (3 - 2 * t);
+const clamp01 = t => Math.max(0, Math.min(1, t));
+
+function text(str, x, y, font, color, alpha) {
+  if (alpha <= 0.01) return;
+  ctx.save(); ctx.globalAlpha = alpha; ctx.font = font; ctx.fillStyle = color;
+  ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(str, x, y); ctx.restore();
+}
+function runs(list, y, alpha) {
+  if (alpha <= 0.01) return;
+  ctx.save(); ctx.globalAlpha = alpha; ctx.textAlign = "left"; ctx.textBaseline = "middle";
+  let total = 0;
+  for (const r of list) { ctx.font = r.f; r.w = ctx.measureText(r.t).width; total += r.w; }
+  let x = 360 - total / 2;
+  for (const r of list) {
+    ctx.font = r.f; ctx.fillStyle = r.c || "#dcdcdf";
+    ctx.fillText(r.t, x, y + (r.dy || 0));
+    if (r.under) { ctx.font = r.uf; ctx.textAlign = "center"; ctx.fillText(r.under, x + r.w / 2, y + 26); ctx.textAlign = "left"; }
+    x += r.w;
+  }
+  ctx.restore();
+}
+function fmtErr(e, digits) {
+  const min = Math.pow(10, -digits);
+  return e < min ? "< " + min.toFixed(digits) : e.toFixed(digits);
+}
+
+function fillFlag(f, cx, cy, s, alpha) {
+  ctx.save(); ctx.globalAlpha = alpha;
+  const w = f.w * s, h = f.h * s;
+  if (f.raw) { /* line art: the drawn line itself is the result */ }
+  else {
+    ctx.fillStyle = f.bg; ctx.fillRect(cx - w / 2, cy - h / 2, w, h);
+    for (const p of f._polys) {
+      ctx.fillStyle = p.color; ctx.beginPath();
+      p.pts.forEach(([x, y], i) => i ? ctx.lineTo(cx + x * s, cy + y * s) : ctx.moveTo(cx + x * s, cy + y * s));
+      ctx.closePath(); ctx.fill();
+    }
+  }
+  ctx.restore();
+}
+function drawChain(circ, t, ox, oy, axis, color, alpha, s) {
+  let x = ox, y = oy;
+  for (const c of circ) {
+    const r = c.R * s, th = c.k * t - c.ph + (axis ? Math.PI / 2 : 0);
+    const nx = x + r * Math.cos(th), ny = y + r * Math.sin(th);
+    if (r > 1.2) {
+      ctx.beginPath(); ctx.arc(x, y, r, 0, TAU);
+      ctx.strokeStyle = rgba(color, 0.5 * alpha); ctx.lineWidth = 1.4; ctx.stroke();
+    }
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(nx, ny);
+    ctx.strokeStyle = rgba(color, 0.95 * alpha); ctx.lineWidth = 2.2; ctx.stroke();
+    x = nx; y = ny;
+  }
+  return [x, y];
+}
+function drawTrace(sd, f, fcx, fcy, s, alpha, jumpA = 1) {
+  const lab = F._d.lab, xs = sd.xs, ys = sd.ys;
+  const n = Math.min(M - 1, Math.floor(f));
+  const fr = f - n, nx = (n + 1) % M;
+  const px = xs[n] + (xs[nx] - xs[n]) * fr, py = ys[n] + (ys[nx] - ys[n]) * fr;
+  ctx.save(); ctx.globalAlpha = alpha; ctx.lineJoin = "round"; ctx.lineCap = "round";
+  const P = i => [fcx + xs[i % M] * s, fcy + ys[i % M] * s];
+  const col = l => l === 2 ? DIM : l ? "#f5f5f5" : RED;
+  const wid = l => l === 2 ? 2 : (F.raw ? 3 : 4.5);
+  let i = 0;
+  while (i < n) {
+    let j = i; const l = lab[i];
+    ctx.beginPath(); ctx.moveTo(...P(i));
+    while (j < n && lab[j + 1] === l) { j++; ctx.lineTo(...P(j)); }
+    if (j < n) { j++; ctx.lineTo(...P(j)); }
+    ctx.globalAlpha = alpha * (l === 2 ? jumpA : 1);
+    ctx.strokeStyle = col(l); ctx.lineWidth = wid(l); ctx.stroke();
+    i = j > i ? j : i + 1;
+  }
+  ctx.beginPath(); ctx.moveTo(...P(n)); ctx.lineTo(fcx + px * s, fcy + py * s);
+  ctx.globalAlpha = alpha * (lab[n] === 2 ? jumpA : 1);
+  ctx.strokeStyle = col(lab[n]); ctx.lineWidth = wid(lab[n]); ctx.stroke();
+  ctx.restore();
+  return [fcx + px * s, fcy + py * s];
+}
+
+/* ---------- main frame ---------- */
+let T = 0, playing = true, speedMul = 1, last = performance.now(), scrubbing = false;
+function frame() {
+  if (!F) return;
+  ctx.setTransform(kScale, 0, 0, kScale, 0, 0);
+  ctx.fillStyle = "#0a0a0c"; ctx.fillRect(0, 0, 720, 1280);
+
+  const sDraw = Math.min(380 / F.w, 300 / F.h), sFin = Math.min(580 / F.w, 460 / F.h);
+  let stageIdx = -1, prog = 0, u = 0, mode = "intro";
+  if (T >= INTRO) {
+    const q = T - INTRO;
+    if (q < STAGES.length * STAGE_T) {
+      stageIdx = Math.floor(q / STAGE_T); mode = "stage";
+      prog = Math.min(1, (q - stageIdx * STAGE_T) / DRAW_T);
+    } else {
+      stageIdx = STAGES.length - 1; prog = 1; mode = "fade";
+      u = Math.min(1, (q - STAGES.length * STAGE_T) / TRANS);
+    }
+  }
+  const e = smooth(u);
+  const s = lerp(sDraw, sFin, e);
+  const fcx = lerp(470, 360, e), fcy = lerp(700, 640, e);
+
+  // titles
+  text(F.title || ("Drawing the flag of " + F.name), 360, 70, `italic 34px ${SERIF}`, "#eeeeee", 1);
+  text(F.desc || "one line of spinning circles", 360, 115, `italic 20px ${SERIF}`, "#8d8d94", 1);
+
+  ctx.strokeStyle = `rgba(255,255,255,${0.07 * (1 - 0.6 * e)})`; ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(fcx, fcy - 250); ctx.lineTo(fcx, fcy + 250);
+  ctx.moveTo(fcx - 300, fcy); ctx.lineTo(fcx + 300, fcy);
+  ctx.stroke();
+
+  fillFlag(F, fcx, fcy, s, 0.13 + 0.87 * e);
+
+  if (stageIdx >= 0) {
+    const N = STAGES[stageIdx], sd = stageData(N);
+    const t = prog * TAU, fi = prog * M;
+    const chainA = 1 - e, D = F._d;
+    if (chainA > 0.01) {
+      const ox = fcx + D.a0x * s, oy = fcy + D.a0y * s;
+      const ex = drawChain(sd.cx, t, ox, fcy - 350, 0, TEAL, chainA, s);
+      const ey = drawChain(sd.cy, t, fcx - 340, oy, 1, AMBER, chainA, s);
+      const pen = drawTrace(sd, fi >= M ? M - 1 : fi, fcx, fcy, s, F.raw ? 1 : 1 - e, F.raw ? 1 - e : 1);
+      ctx.save(); ctx.setLineDash([4, 5]); ctx.strokeStyle = `rgba(255,255,255,${0.3 * chainA})`; ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(pen[0], ex[1]); ctx.lineTo(pen[0], pen[1]);
+      ctx.moveTo(ey[0], pen[1]); ctx.lineTo(pen[0], pen[1]);
+      ctx.stroke(); ctx.restore();
+      ctx.beginPath(); ctx.arc(pen[0], pen[1], 6.5, 0, TAU);
+      ctx.fillStyle = `rgba(255,255,255,${chainA})`; ctx.fill();
+    } else if (F.raw) drawTrace(sd, M - 1, fcx, fcy, s, 1, 0);
+    const a1 = mode === "stage" ? 1 : 1 - Math.min(1, u * 2.2);
+    runs([{ t: "N", f: `italic 52px ${SANS}`, c: "#ff6652" }, { t: " = " + N, f: `52px ${SANS}`, c: "#ff6652" }], 1064, a1);
+    text(`error = ${fmtErr(sd.err, 2)}%`, 360, 1148, `38px ${SERIF}`, "#f4f4f4", a1);
+    if (N > SHOW) text(`showing the ${SHOW} biggest of ${N} circles`, 360, 1223, `italic 18px ${SERIF}`, "#77777e", a1);
+    if (mode === "fade") {
+      const a2 = clamp01((u - 0.45) / 0.3), f28 = `28px ${SERIF}`, fi28 = `italic 28px ${SERIF}`, f18 = `italic 18px ${SERIF}`;
+      const line = (x, a, b, c, d) => [
+        { t: x + "(t) = ", f: f28 }, { t: "∑", f: `38px ${SERIF}`, under: "k", uf: f18 },
+        { t: " (" + a, f: f28 }, { t: "k", f: f18, dy: 7 }, { t: " cos ", f: f28 }, { t: "kt", f: fi28 },
+        { t: " + " + b, f: f28 }, { t: "k", f: f18, dy: 7 }, { t: " sin ", f: f28 }, { t: "kt", f: fi28 }, { t: ")", f: f28 }];
+      runs(line("x", "a", "b"), 1030, a2);
+      runs(line("y", "c", "d"), 1100, a2);
+      const KN = STAGES[STAGES.length - 1];
+      text(`N = ${KN}  ·  error ${fmtErr(stageData(KN).err, 3)}%  ·  one continuous line`, 360, 1223, `18px ${SERIF}`, "#7d7d84", a2);
+    }
+  }
+  $("scrub").value = Math.round(T / TOTAL * 1000);
+}
+function tick(now) {
+  const dt = Math.min(60, now - last); last = now;
+  if (playing && !scrubbing) {
+    T += dt * speedMul;
+    if (T >= TOTAL) { T = TOTAL; playing = false; $("play").textContent = "▶"; }
+  }
+  frame();
+  requestAnimationFrame(tick);
+}
+
+/* ---------- loading / UI ---------- */
+const $ = id => document.getElementById(id);
+function setStatus(msg, ok) { const s = $("status"); s.textContent = msg || ""; s.className = "status" + (ok ? " ok" : ""); }
+function loadFlag(f) {
+  F = buildFlag(f);
+  STAGES = f.free ? STAGES_FREE : STAGES_FLAG;
+  TOTAL = INTRO + STAGES.length * STAGE_T + TRANS;
+  T = 0; playing = true; $("play").textContent = "⏸";
+  document.querySelectorAll(".chips button").forEach(b => b.classList.toggle("on", !f.free && b.dataset.name === f.name));
+  // warm the stage cache without blocking the first frames
+  let i = 0;
+  const warm = () => { if (F !== f || i >= STAGES.length) return; stageData(STAGES[i++]); setTimeout(warm, 30); };
+  setTimeout(warm, 50);
+}
+function exportSpec(f) {
+  return { name: f.name, w: f.w, h: f.h, bg: f.bg, shapes: f.shapes.map(s => {
+    const o = {}; for (const k in s) o[k] = typeof s[k] === "number" ? +s[k].toFixed(4) : s[k]; return o; }) };
+}
+const specText = f => JSON.stringify(exportSpec(f), null, 1).replace(/\n\s+/g, " ").replace(/\{ "name"/, '{\n "name"');
+const chips = $("chips");
+FLAGS.forEach(f => {
+  const b = document.createElement("button");
+  b.textContent = f.name; b.dataset.name = f.name;
+  b.onclick = () => { setStatus(""); $("traceRow").style.display = $("traceHint").style.display = "none"; loadFlag(f); $("json").value = specText(f); };
+  chips.appendChild(b);
+});
+$("json").value = specText(FLAGS[0]);
+
+$("play").onclick = () => { if (recording) return; if (T >= TOTAL) T = 0; playing = !playing; $("play").textContent = playing ? "⏸" : "▶"; };
+$("restart").onclick = () => { if (recording) return; T = 0; playing = true; $("play").textContent = "⏸"; };
+$("speed").onclick = () => {
+  if (recording) return;
+  speedMul = speedMul === 1 ? 2 : speedMul === 2 ? 0.5 : 1;
+  $("speed").textContent = speedMul + "×";
+};
+const sc = $("scrub");
+sc.addEventListener("input", () => { if (recording) return; scrubbing = true; T = sc.value / 1000 * TOTAL; });
+["change", "pointerup", "touchend"].forEach(ev => sc.addEventListener(ev, () => { scrubbing = false; }));
+$("customBtn").onclick = () => $("panel").classList.toggle("open");
+$("apply").onclick = () => {
+  try {
+    const spec = JSON.parse($("json").value);
+    if (!(spec.w > 0 && spec.h > 0) || !Array.isArray(spec.shapes)) throw new Error("w, h va shapes kerak");
+    spec.bg = spec.bg || "#ffffff"; spec.desc = spec.desc || "one line of spinning circles";
+    $("traceRow").style.display = $("traceHint").style.display = "none";
+    loadFlag(spec); setStatus("");
+  } catch (err) { setStatus("Xato: " + err.message); }
+};
+
+/* ---- image upload (button, drag & drop, paste) ---- */
+let curImg = null, curName = "image", curMode = "auto";
+function processImage() {
+  if (!curImg) return;
+  setStatus("Kontur qidirilmoqda…", true);
+  setTimeout(() => {
+    try {
+      const detail = +$("detail").value;
+      let f = null;
+      if (curMode === "color") f = traceColors(curImg, curName, true);
+      else if (curMode === "auto") f = traceColors(curImg, curName, false);
+      if (!f) f = traceEdges(curImg, curName, detail);
+      $("traceRow").style.display = $("traceHint").style.display = "flex";
+      $("traceHint").style.display = "block";
+      loadFlag(f);
+      setStatus(f.raw ? "Tayyor: chiziq rejimi" : "Tayyor: ranglar rejimi", true);
+    } catch (err) { setStatus("Xato: " + err.message); }
+  }, 40);
+}
+function handleFile(file) {
+  if (!file || !/^image\//.test(file.type || "image/")) { setStatus("Bu rasm emas"); return; }
+  setStatus("Rasm o'qilmoqda…", true);
+  const fr = new FileReader();
+  fr.onerror = () => setStatus("Xato: fayl o'qilmadi");
+  fr.onload = () => {
+    const img = new Image();
+    img.onload = () => {
+      curImg = img;
+      curName = (file.name || "image").replace(/\.[^.]+$/, "").slice(0, 26) || "image";
+      curMode = "auto";
+      document.querySelectorAll("#seg button").forEach(b => b.classList.toggle("on", b.dataset.m === "auto"));
+      processImage();
+    };
+    img.onerror = () => setStatus("Xato: rasm formati qo'llanmaydi");
+    img.src = fr.result;
+  };
+  fr.readAsDataURL(file);
+}
+$("upload").onclick = () => { $("file").value = ""; $("file").click(); };
+$("file").addEventListener("change", ev => handleFile(ev.target.files && ev.target.files[0]));
+window.addEventListener("dragover", ev => ev.preventDefault());
+window.addEventListener("drop", ev => { ev.preventDefault(); const f = ev.dataTransfer && ev.dataTransfer.files[0]; if (f) handleFile(f); });
+window.addEventListener("paste", ev => {
+  const items = ev.clipboardData && ev.clipboardData.files;
+  if (items && items[0]) handleFile(items[0]);
+});
+$("seg").addEventListener("click", ev => {
+  const b = ev.target.closest("button"); if (!b) return;
+  curMode = b.dataset.m;
+  document.querySelectorAll("#seg button").forEach(x => x.classList.toggle("on", x === b));
+  processImage();
+});
+let detailTimer = 0;
+$("detail").addEventListener("input", () => { clearTimeout(detailTimer); detailTimer = setTimeout(() => { if (curMode !== "color") processImage(); }, 350); });
+
+/* ---- save as video ---- */
+$("rec").onclick = async () => {
+  if (recording) return;
+  if (!window.MediaRecorder || !cv.captureStream) { setStatus("Bu qurilmada video yozish ishlamaydi"); return; }
+  const types = ["video/mp4;codecs=avc1.42E01E", "video/mp4", "video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"];
+  const mime = types.find(t => MediaRecorder.isTypeSupported(t));
+  if (!mime) { setStatus("Bu qurilmada video formati topilmadi"); return; }
+  recording = true;
+  const oldSpeed = speedMul; speedMul = 1; $("speed").textContent = "1×";
+  cv.width = 720; cv.height = 1280; kScale = 1;
+  ["rec", "upload", "play", "restart", "speed", "scrub", "apply", "customBtn"].forEach(id => $(id).disabled = true);
+  $("result").style.display = "none"; $("result").innerHTML = "";
+  T = 0; playing = true; scrubbing = false;
+  const chunks = [];
+  const rec = new MediaRecorder(cv.captureStream(30), { mimeType: mime, videoBitsPerSecond: 6000000 });
+  rec.ondataavailable = ev => { if (ev.data && ev.data.size) chunks.push(ev.data); };
+  const finished = new Promise(res => { rec.onstop = res; });
+  rec.start(500);
+  let endAt = 0;
+  const timer = setInterval(() => {
+    setStatus(`Yozilmoqda… ${Math.min(100, Math.round(T / TOTAL * 100))}% (sahifani yopmang)`, true);
+    if (T >= TOTAL) {
+      if (!endAt) endAt = performance.now() + HOLD_END;
+      if (performance.now() >= endAt) { clearInterval(timer); rec.stop(); }
+    }
+  }, 200);
+  await finished;
+  recording = false; speedMul = oldSpeed; $("speed").textContent = speedMul + "×";
+  ["rec", "upload", "play", "restart", "speed", "scrub", "apply", "customBtn"].forEach(id => $(id).disabled = false);
+  resize();
+  const ext = mime.indexOf("mp4") >= 0 ? "mp4" : "webm";
+  const blob = new Blob(chunks, { type: ext === "mp4" ? "video/mp4" : "video/webm" });
+  const fname = (F.name || "drawing").replace(/[^\w\-]+/g, "_") + "." + ext;
+  let saved = false;
+  try {
+    const dl = window.claude && claude.use ? await claude.use("downloads") : null;
+    if (dl) { await dl.save({ filename: fname, data: blob }); saved = true; setStatus("Video saqlandi: " + fname, true); }
+  } catch (err) {
+    setStatus(err && err.code === "declined" ? "Saqlash bekor qilindi — pastdan videoni oching" : "Saqlab bo'lmadi — pastdan videoni oching");
+  }
+  if (!saved) {
+    // fallback: show the video so it can be saved with a long-press / share menu
+    const url = URL.createObjectURL(blob), box = $("result");
+    box.style.display = "flex";
+    box.innerHTML = '<video controls playsinline></video><div class="row"><button id="shareBtn" style="display:none">📤 Ulashish / saqlash</button><a download></a></div><div class="hint">Saqlash: videoni bosib turing yoki “Ulashish” tugmasini bosing.</div>';
+    box.querySelector("video").src = url;
+    const a = box.querySelector("a"); a.href = url; a.download = fname; a.textContent = "⬇ " + fname;
+    try {
+      const file = new File([blob], fname, { type: blob.type });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        const sb = $("shareBtn"); sb.style.display = "inline-block";
+        sb.onclick = () => navigator.share({ files: [file], title: "Aylanuvchi doiralar" }).catch(() => {});
+      }
+    } catch (e2) { /* share unsupported */ }
+    if (!$("status").textContent) setStatus("Video tayyor — pastda", true);
+  }
+  T = 0; playing = true; $("play").textContent = "⏸";
+};
+
+try {
+  if (window.Telegram && Telegram.WebApp) {
+    const tg = Telegram.WebApp;
+    tg.ready(); tg.expand();
+    if (tg.setHeaderColor) tg.setHeaderColor("#0a0a0c");
+    if (tg.setBackgroundColor) tg.setBackgroundColor("#0a0a0c");
+  }
+} catch (e) { /* not inside Telegram */ }
+resize();
+requestAnimationFrame(t => { last = t; tick(t); });
+loadFlag(FLAGS[0]);
+</script>
+</body>
+</html>
