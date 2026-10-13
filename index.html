@@ -225,6 +225,7 @@ function shapePts(s) {
 /* ---------- presets ---------- */
 const R_ = (x, y, w, h, color) => ({ k: "rect", x, y, w, h, color });
 const FLAGS = [
+  { name: "Uzbekistan", w: 2, h: 1, bg: "#ffffff", desc: "a crescent, twelve stars, one line of spinning circles", shapes: sh },
   { name: "Turkey", w: 3, h: 2, bg: "#E30A17", desc: "a crescent, a star, one line of spinning circles",
     shapes: [
       { k: "crescent", cx: -0.5, cy: 0, R: 0.5, r: 0.4, d: 0.125, color: "#fff" },
@@ -257,7 +258,7 @@ const FLAGS = [
     [[3, -0.45, -0.43], [4, -0.485, -0.36], [5, -0.52, -0.29]].forEach(([n, x0, y]) => {
       for (let i = 0; i < n; i++) sh.push({ k: "star", cx: x0 + i * 0.07, cy: y, R: 0.028, color: "#fff" });
     });
-    return { name: "Uzbekistan", w: 2, h: 1, bg: "#ffffff", desc: "a crescent, twelve stars, one line of spinning circles", shapes: sh };
+    return
   })()
 ];
 
