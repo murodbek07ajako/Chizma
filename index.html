@@ -56,6 +56,11 @@ textarea{width:100%;min-height:150px;background:#0e0e12;color:#e6e6e8;border:1px
 #result video{width:100%;max-height:60vh;border-radius:12px;background:#000}
 #result a{color:var(--accent);font-size:13px}
 .hint{font-size:12px;color:var(--mute);line-height:1.45}
+input[type=text]{background:#0e0e12;color:var(--fg);border:1px solid var(--line);border-radius:10px;padding:9px 11px;font:14px system-ui,sans-serif;flex:1;min-width:120px}
+.sw{display:flex;gap:9px;flex-wrap:wrap}
+.sw button{width:28px;height:28px;padding:0;border-radius:50%;border:2px solid var(--line)}
+.sw button.on{border-color:#fff}
+#result img{width:100%;max-height:60vh;object-fit:contain;border-radius:12px;background:#0a0a0c}
 </style>
 </head>
 <body>
@@ -64,38 +69,53 @@ textarea{width:100%;min-height:150px;background:#0e0e12;color:#e6e6e8;border:1px
 
   <div class="ctl">
     <div class="row">
-      <button id="play" aria-label="Pauza / davom">⏸</button>
-      <button id="restart" aria-label="Qaytadan">↻</button>
+      <button id="play" aria-label="Play / Pause">⏸</button>
+      <button id="restart" aria-label="Restart">↻</button>
       <button id="speed">1×</button>
-      <input type="range" id="scrub" min="0" max="1000" value="0" aria-label="Vaqt">
+      <button id="skip" aria-label="Skip to result">⏭</button>
+      <input type="range" id="scrub" min="0" max="1000" value="0" aria-label="Time">
     </div>
 
     <div class="row">
-      <button id="upload" class="main">📷 Rasm yuklash</button>
-      <button id="rec">🎬 Videoga saqlash</button>
+      <button id="upload" class="main" data-i="upload"></button>
+      <button id="rec" data-i="rec"></button>
+      <button id="png" data-i="png"></button>
     </div>
     <input class="hide-file" type="file" id="file" accept="image/*">
     <div class="status" id="status"></div>
 
     <div class="row" id="traceRow" style="display:none">
-      <span class="lbl">Rejim</span>
+      <span class="lbl" data-i="mode"></span>
       <div class="seg" id="seg">
-        <button data-m="auto" class="on">Avto</button>
-        <button data-m="color">Ranglar</button>
-        <button data-m="edge">Chiziq</button>
+        <button data-m="auto" class="on" data-i="auto"></button>
+        <button data-m="color" data-i="color"></button>
+        <button data-m="edge" data-i="edge"></button>
       </div>
-      <span class="lbl">Detal</span>
-      <input type="range" id="detail" min="1000" max="5000" step="100" value="3200" aria-label="Detal">
+      <span class="lbl" data-i="detail"></span>
+      <input type="range" id="detail" min="1000" max="5000" step="100" value="3200" aria-label="Detail">
     </div>
-    <div class="hint" id="traceHint" style="display:none">Ranglar — bayroq, logo, multfilm uchun. Chiziq — foto, portret, har qanday rasm uchun (konturlarni topadi). Detal — chiziq mayda-mayda ko'proq bo'lishi.</div>
+    <div class="hint" id="traceHint" data-i="hint" style="display:none"></div>
 
     <div class="chips" id="chips"></div>
 
-    <div class="row"><button id="customBtn">＋ Shakl bilan yasash (JSON)</button></div>
+    <div class="row">
+      <button id="setBtn" data-i="settings"></button>
+      <button id="customBtn" data-i="json_btn"></button>
+      <button id="shareApp" data-i="share"></button>
+    </div>
+
+    <div class="panel" id="setPanel">
+      <div class="row"><span class="lbl" data-i="lang"></span>
+        <div class="seg" id="langSeg"><button data-l="uz">O'zbek</button><button data-l="ru">Русский</button><button data-l="en">English</button></div>
+      </div>
+      <div class="row"><span class="lbl" data-i="linecolor"></span><div class="sw" id="sw"></div></div>
+      <div class="row"><span class="lbl" data-i="wm"></span><input type="text" id="wm" maxlength="32" placeholder="@bot" autocomplete="off"></div>
+    </div>
+
     <div class="panel" id="panel">
-      <p>Shakllar: rect, circle, star, crescent, poly. Koordinatalar markazdan, y pastga qarab o'sadi.</p>
+      <p data-i="json_help"></p>
       <textarea id="json" spellcheck="false"></textarea>
-      <div class="row"><button id="apply">Chizish</button></div>
+      <div class="row"><button id="apply" data-i="apply"></button></div>
     </div>
     <div id="result"></div>
   </div>
@@ -113,6 +133,50 @@ const SHOW = 30;
 const RED = "#ff4b3a", DIM = "#b0473f", TEAL = "#86d4bd", AMBER = "#d7ae65";
 const SERIF = 'Georgia, "Times New Roman", serif';
 const SANS = '"DejaVu Sans", Verdana, system-ui, sans-serif';
+const APP_LINK = "";   // masalan: "https://t.me/BOT_USERNAME/chizma" (bo'sh bo'lsa sahifa havolasi ishlatiladi)
+let lang = "uz", lineMode = "#f5f5f5", wmText = "";
+
+const I18N = {
+  uz: { upload: "📷 Rasm yuklash", rec: "🎬 Video", png: "🖼 PNG", settings: "⚙ Sozlamalar", json_btn: "＋ Shakl (JSON)", share: "📤 Do'stlarga",
+    mode: "Rejim", detail: "Detal", auto: "Avto", color: "Ranglar", edge: "Chiziq", lang: "Til", linecolor: "Chiziq rangi", wm: "Belgi", apply: "Chizish",
+    hint: "Ranglar — bayroq, logo, multfilm uchun. Chiziq — foto, portret, har qanday rasm uchun (konturlarni topadi). Detal — mayda chiziqlar soni.",
+    json_help: "Shakllar: rect, circle, star, crescent, poly. Koordinatalar markazdan, y pastga qarab o'sadi.",
+    reading: "Rasm o'qilmoqda…", tracing: "Kontur qidirilmoqda…", done_edge: "Tayyor: chiziq rejimi", done_color: "Tayyor: ranglar rejimi",
+    err: "Xato", not_image: "Bu rasm emas", bad_file: "fayl o'qilmadi", bad_format: "rasm formati qo'llanmaydi",
+    rec_unsup: "Bu qurilmada video yozish ishlamaydi", rec_nofmt: "Bu qurilmada video formati topilmadi", rec_prog: "Yozilmoqda… {p}% (sahifani yopmang)",
+    saved: "Saqlandi: {n}", ready: "Tayyor — pastda", save_hint: "Saqlash: bosib turing yoki “Ulashish” tugmasini bosing.",
+    declined: "Saqlash bekor qilindi — pastdan oching", failed: "Saqlab bo'lmadi — pastdan oching", share_btn: "📤 Ulashish / saqlash",
+    share_text: "Rasmni aylanuvchi doiralar bilan chizdiring ✨",
+    E_NOCOLOR: "Rangli joylar topilmadi", E_NOCONTOUR: "Kontur topilmadi", E_FLAT: "Chiziqlar topilmadi — rasm juda tekis", E_NOLINES: "Chiziqlar topilmadi", E_JSON: "w, h va shapes kerak" },
+  ru: { upload: "📷 Загрузить фото", rec: "🎬 Видео", png: "🖼 PNG", settings: "⚙ Настройки", json_btn: "＋ Фигуры (JSON)", share: "📤 Друзьям",
+    mode: "Режим", detail: "Детали", auto: "Авто", color: "Цвета", edge: "Линия", lang: "Язык", linecolor: "Цвет линии", wm: "Подпись", apply: "Рисовать",
+    hint: "Цвета — для флагов, логотипов, мультфильмов. Линия — для фото, портретов, любых картинок (находит контуры). Детали — число мелких линий.",
+    json_help: "Фигуры: rect, circle, star, crescent, poly. Координаты от центра, y растёт вниз.",
+    reading: "Читаю картинку…", tracing: "Ищу контуры…", done_edge: "Готово: режим линии", done_color: "Готово: режим цветов",
+    err: "Ошибка", not_image: "Это не картинка", bad_file: "файл не прочитан", bad_format: "формат не поддерживается",
+    rec_unsup: "Запись видео не поддерживается", rec_nofmt: "Формат видео не найден", rec_prog: "Запись… {p}% (не закрывайте страницу)",
+    saved: "Сохранено: {n}", ready: "Готово — ниже", save_hint: "Сохранить: зажмите видео или нажмите «Поделиться».",
+    declined: "Сохранение отменено — откройте ниже", failed: "Не удалось сохранить — откройте ниже", share_btn: "📤 Поделиться / сохранить",
+    share_text: "Нарисуй любую картинку вращающимися кругами ✨",
+    E_NOCOLOR: "Цветные области не найдены", E_NOCONTOUR: "Контур не найден", E_FLAT: "Линии не найдены — картинка слишком ровная", E_NOLINES: "Линии не найдены", E_JSON: "нужны w, h и shapes" },
+  en: { upload: "📷 Upload picture", rec: "🎬 Video", png: "🖼 PNG", settings: "⚙ Settings", json_btn: "＋ Shapes (JSON)", share: "📤 Share app",
+    mode: "Mode", detail: "Detail", auto: "Auto", color: "Colors", edge: "Line", lang: "Language", linecolor: "Line color", wm: "Watermark", apply: "Draw",
+    hint: "Colors: flags, logos, cartoons. Line: photos, portraits, anything (finds edges). Detail: how many small lines.",
+    json_help: "Shapes: rect, circle, star, crescent, poly. Coordinates from center, y grows downward.",
+    reading: "Reading picture…", tracing: "Finding outlines…", done_edge: "Done: line mode", done_color: "Done: color mode",
+    err: "Error", not_image: "Not a picture", bad_file: "file could not be read", bad_format: "unsupported image format",
+    rec_unsup: "Video recording is not supported here", rec_nofmt: "No video format found", rec_prog: "Recording… {p}% (keep this page open)",
+    saved: "Saved: {n}", ready: "Ready — below", save_hint: "To save: press and hold the video, or tap “Share”.",
+    declined: "Save cancelled — open it below", failed: "Could not save — open it below", share_btn: "📤 Share / save",
+    share_text: "Draw any picture with spinning circles ✨",
+    E_NOCOLOR: "No color regions found", E_NOCONTOUR: "No outline found", E_FLAT: "No lines found — image too flat", E_NOLINES: "No lines found", E_JSON: "w, h and shapes are required" }
+};
+const tr = (k, v) => {
+  let x = (I18N[lang] && I18N[lang][k]) || I18N.en[k] || k;
+  if (v) for (const q in v) x = x.replace("{" + q + "}", v[q]);
+  return x;
+};
+const errText = e => { const m = e && e.message || String(e); return tr("err") + ": " + (I18N.en[m] ? tr(m) : m); };
 
 /* ---------- shape builders (units, y points down) ---------- */
 function circlePts(cx, cy, r, n = 120) {
@@ -196,6 +260,35 @@ const FLAGS = [
     return { name: "Uzbekistan", w: 2, h: 1, bg: "#ffffff", desc: "a crescent, twelve stars, one line of spinning circles", shapes: sh };
   })()
 ];
+
+(function addMoreFlags() {
+  const e = "one line of spinning circles";
+  const S = (name, w, h, bg, desc, shapes) => ({ name, w, h, bg, desc, shapes });
+  const poly = (pts, color) => ({ k: "poly", color, pts });
+  const third = 2 / 3;
+  const chinaStars = [[-5, -8], [-3, -6], [-3, -3], [-5, -1]].map(([x, y]) =>
+    ({ k: "star", cx: x, cy: y, R: 1, rot: Math.atan2(-5 - y, -10 - x), color: "#FFDE00" }));
+  FLAGS.push(
+    S("Russia", 3, 2, "#ffffff", "three stripes, " + e, [R_(-1.5, -1 / 3, 3, third, "#0039A6"), R_(-1.5, 1 / 3, 3, third, "#D52B1E")]),
+    S("Italy", 3, 2, "#ffffff", "three stripes, " + e, [R_(-1.5, -1, 1, 2, "#009246"), R_(0.5, -1, 1, 2, "#CE2B37")]),
+    S("Netherlands", 3, 2, "#ffffff", "three stripes, " + e, [R_(-1.5, -1, 3, third, "#AE1C28"), R_(-1.5, 1 / 3, 3, third, "#21468B")]),
+    S("Indonesia", 3, 2, "#ffffff", "two stripes, " + e, [R_(-1.5, -1, 3, 1, "#CE1126")]),
+    S("Austria", 3, 2, "#ffffff", "three stripes, " + e, [R_(-1.5, -1, 3, third, "#ED2939"), R_(-1.5, 1 / 3, 3, third, "#ED2939")]),
+    S("Hungary", 3, 2, "#ffffff", "three stripes, " + e, [R_(-1.5, -1, 3, third, "#CD2A3E"), R_(-1.5, 1 / 3, 3, third, "#436F4D")]),
+    S("Ireland", 3, 2, "#ffffff", "three stripes, " + e, [R_(-1.5, -1, 1, 2, "#169B62"), R_(0.5, -1, 1, 2, "#FF883E")]),
+    S("Sweden", 16, 10, "#006AA7", "a cross, " + e, [poly([[-8,-1],[-3,-1],[-3,-5],[-1,-5],[-1,-1],[8,-1],[8,1],[-1,1],[-1,5],[-3,5],[-3,1],[-8,1]], "#FECC02")]),
+    S("Finland", 18, 11, "#ffffff", "a cross, " + e, [poly([[-9,-1.5],[-4,-1.5],[-4,-5.5],[-1,-5.5],[-1,-1.5],[9,-1.5],[9,1.5],[-1,1.5],[-1,5.5],[-4,5.5],[-4,1.5],[-9,1.5]], "#003580")]),
+    S("Azerbaijan", 2, 1, "#ED2939", "a crescent, a star, " + e, [
+      R_(-1, -0.5, 2, 1 / 3, "#00B5E2"), R_(-1, 1 / 6, 2, 1 / 3, "#509E2F"),
+      { k: "crescent", cx: -0.04, cy: 0, R: 0.1, r: 0.08, d: 0.025, color: "#fff" },
+      { k: "star", cx: 0.12, cy: 0, R: 0.055, color: "#fff" }]),
+    S("Pakistan", 3, 2, "#01411C", "a crescent, a star, " + e, [
+      R_(-1.5, -1, 0.75, 2, "#ffffff"),
+      { k: "crescent", cx: 0.15, cy: 0, R: 0.5, r: 0.42, d: 0.1, rot: -0.5, color: "#fff" },
+      { k: "star", cx: 0.45, cy: -0.3, R: 0.17, rot: -1.2, color: "#fff" }]),
+    S("China", 30, 20, "#DE2910", "five stars, " + e, [{ k: "star", cx: -10, cy: -5, R: 3, color: "#FFDE00" }].concat(chinaStars))
+  );
+})();
 
 /* ---------- build the single closed curve + Fourier series ---------- */
 let F = null, STAGES = STAGES_FLAG, TOTAL = 0;
@@ -309,7 +402,7 @@ function traceColors(img, name, force) {
     if (pal.length >= 7 || e.c < n * 0.012) break;
     if (pal.every(p => dist(p, e) > 80)) pal.push(e);
   }
-  if (pal.length < 2) throw new Error("Rangli joylar topilmadi");
+  if (pal.length < 2) throw new Error("E_NOCOLOR");
   if (!force && pal.length >= 7) return null;       // photo-like: let caller use edges
   let L = new Uint8Array(n);
   for (let i = 0; i < n; i++) {
@@ -370,7 +463,7 @@ function traceColors(img, name, force) {
     shapes.push({ k: "poly", color: hex(pal[cp.col]),
       pts: simp.map(([px, py]) => [(px + 0.5) / W * fw - fw / 2, (py + 0.5) / H * fh - fh / 2]) });
   }
-  if (!shapes.length) throw new Error("Kontur topilmadi");
+  if (!shapes.length) throw new Error("E_NOCONTOUR");
   return { name, title: "Drawing " + name, w: fw, h: fh, bg: hex(pal[bg.col]), img, free: true,
     desc: "color regions, one line of spinning circles", shapes };
 }
@@ -425,7 +518,7 @@ function traceEdges(img, name, target) {
     const [ox, oy] = OFF[dir[i]];
     if (m >= mag[(y + oy) * W + x + ox] && m >= mag[(y - oy) * W + x - ox]) { cand[i] = 1; list.push(i); }
   }
-  if (list.length < 30) throw new Error("Chiziqlar topilmadi — rasm juda tekis");
+  if (list.length < 30) throw new Error("E_FLAT");
   const N8 = [-W - 1, -W, -W + 1, -1, 1, W - 1, W, W + 1];
   function hyst(hi) {
     const lo = hi * 0.45, keep = new Uint8Array(n), st = [];
@@ -461,7 +554,7 @@ function traceEdges(img, name, target) {
       if (r.length > target) a = mid; else { b = mid; best = r; }
     }
   }
-  if (best.length < 30) throw new Error("Chiziqlar topilmadi");
+  if (best.length < 30) throw new Error("E_NOLINES");
   // nearest-neighbour walk -> one continuous path
   const px = new Float32Array(best.length), py = new Float32Array(best.length);
   best.forEach((i, k) => { px[k] = i % W; py[k] = (i - (i % W)) / W; });
@@ -497,7 +590,7 @@ const stageEl = document.getElementById("stage");
 let kScale = 1, recording = false;
 function resize() {
   if (recording) return;
-  const w = stageEl.clientWidth, dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const w = stageEl.clientWidth, dpr = Math.min(window.devicePixelRatio || 1, 1.5);
   cv.width = Math.round(w * dpr); cv.height = Math.round(w * 16 / 9 * dpr);
   kScale = cv.width / 720;
 }
@@ -568,21 +661,21 @@ function drawTrace(sd, f, fcx, fcy, s, alpha, jumpA = 1) {
   const px = xs[n] + (xs[nx] - xs[n]) * fr, py = ys[n] + (ys[nx] - ys[n]) * fr;
   ctx.save(); ctx.globalAlpha = alpha; ctx.lineJoin = "round"; ctx.lineCap = "round";
   const P = i => [fcx + xs[i % M] * s, fcy + ys[i % M] * s];
-  const col = l => l === 2 ? DIM : l ? "#f5f5f5" : RED;
+  const col = (l, i) => l === 2 ? DIM : l ? (lineMode === "rainbow" ? `hsl(${(i / M * 720) % 360},85%,66%)` : lineMode) : RED;
   const wid = l => l === 2 ? 2 : (F.raw ? 3 : 4.5);
   let i = 0;
   while (i < n) {
     let j = i; const l = lab[i];
     ctx.beginPath(); ctx.moveTo(...P(i));
-    while (j < n && lab[j + 1] === l) { j++; ctx.lineTo(...P(j)); }
+    while (j < n && lab[j + 1] === l && !(lineMode === "rainbow" && l === 1 && j - i >= 40)) { j++; ctx.lineTo(...P(j)); }
     if (j < n) { j++; ctx.lineTo(...P(j)); }
     ctx.globalAlpha = alpha * (l === 2 ? jumpA : 1);
-    ctx.strokeStyle = col(l); ctx.lineWidth = wid(l); ctx.stroke();
+    ctx.strokeStyle = col(l, i); ctx.lineWidth = wid(l); ctx.stroke();
     i = j > i ? j : i + 1;
   }
   ctx.beginPath(); ctx.moveTo(...P(n)); ctx.lineTo(fcx + px * s, fcy + py * s);
   ctx.globalAlpha = alpha * (lab[n] === 2 ? jumpA : 1);
-  ctx.strokeStyle = col(lab[n]); ctx.lineWidth = wid(lab[n]); ctx.stroke();
+  ctx.strokeStyle = col(lab[n], n); ctx.lineWidth = wid(lab[n]); ctx.stroke();
   ctx.restore();
   return [fcx + px * s, fcy + py * s];
 }
@@ -655,6 +748,7 @@ function frame() {
       text(`N = ${KN}  ·  error ${fmtErr(stageData(KN).err, 3)}%  ·  one continuous line`, 360, 1223, `18px ${SERIF}`, "#7d7d84", a2);
     }
   }
+  if (wmText) text(wmText, 360, 1258, `16px ${SANS}`, "#ffffff", 0.38);
   $("scrub").value = Math.round(T / TOTAL * 1000);
 }
 function tick(now) {
@@ -695,8 +789,43 @@ FLAGS.forEach(f => {
 });
 $("json").value = specText(FLAGS[0]);
 
+/* ---------- settings (kept on this device) ---------- */
+function store(k, v) {
+  try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { /* storage blocked */ }
+  return null;
+}
+const tg = (window.Telegram && Telegram.WebApp) || null;
+const LINE_COLORS = ["#f5f5f5", "#ffd166", "#7dd3fc", "#ff7eb6", "#86efac", "rainbow"];
+
+function detectLang() {
+  const saved = store("lang");
+  if (saved && I18N[saved]) return saved;
+  const u = tg && tg.initDataUnsafe && tg.initDataUnsafe.user;
+  const c = ((u && u.language_code) || navigator.language || "uz").slice(0, 2).toLowerCase();
+  if (I18N[c]) return c;
+  return ["kk", "ky", "tg", "be", "uk", "tk"].indexOf(c) >= 0 ? "ru" : "en";
+}
+function applyLang() {
+  document.documentElement.lang = lang;
+  document.querySelectorAll("[data-i]").forEach(el => { el.textContent = tr(el.dataset.i); });
+  document.querySelectorAll("#langSeg button").forEach(b => b.classList.toggle("on", b.dataset.l === lang));
+}
+function paintSwatches() {
+  document.querySelectorAll("#sw button").forEach(b => b.classList.toggle("on", b.dataset.c === lineMode));
+}
+const swBox = $("sw");
+LINE_COLORS.forEach(c => {
+  const b = document.createElement("button");
+  b.dataset.c = c; b.setAttribute("aria-label", c);
+  b.style.background = c === "rainbow" ? "conic-gradient(#f33,#fd3,#3e6,#3df,#36f,#d3f,#f33)" : c;
+  b.onclick = () => { lineMode = c; store("lc", c); paintSwatches(); };
+  swBox.appendChild(b);
+});
+
+/* ---------- playback controls ---------- */
 $("play").onclick = () => { if (recording) return; if (T >= TOTAL) T = 0; playing = !playing; $("play").textContent = playing ? "⏸" : "▶"; };
 $("restart").onclick = () => { if (recording) return; T = 0; playing = true; $("play").textContent = "⏸"; };
+$("skip").onclick = () => { if (recording) return; T = TOTAL; playing = false; $("play").textContent = "▶"; };
 $("speed").onclick = () => {
   if (recording) return;
   speedMul = speedMul === 1 ? 2 : speedMul === 2 ? 0.5 : 1;
@@ -706,21 +835,36 @@ const sc = $("scrub");
 sc.addEventListener("input", () => { if (recording) return; scrubbing = true; T = sc.value / 1000 * TOTAL; });
 ["change", "pointerup", "touchend"].forEach(ev => sc.addEventListener(ev, () => { scrubbing = false; }));
 $("customBtn").onclick = () => $("panel").classList.toggle("open");
+$("setBtn").onclick = () => $("setPanel").classList.toggle("open");
 $("apply").onclick = () => {
   try {
     const spec = JSON.parse($("json").value);
-    if (!(spec.w > 0 && spec.h > 0) || !Array.isArray(spec.shapes)) throw new Error("w, h va shapes kerak");
+    if (!(spec.w > 0 && spec.h > 0) || !Array.isArray(spec.shapes)) throw new Error("E_JSON");
     spec.bg = spec.bg || "#ffffff"; spec.desc = spec.desc || "one line of spinning circles";
     $("traceRow").style.display = $("traceHint").style.display = "none";
     loadFlag(spec); setStatus("");
-  } catch (err) { setStatus("Xato: " + err.message); }
+  } catch (err) { setStatus(errText(err)); }
+};
+$("langSeg").addEventListener("click", ev => {
+  const b = ev.target.closest("button"); if (!b) return;
+  lang = b.dataset.l; store("lang", lang); applyLang();
+});
+$("wm").addEventListener("input", () => { wmText = $("wm").value.trim(); store("wm", wmText); });
+$("shareApp").onclick = () => {
+  const link = APP_LINK || (location.origin + location.pathname), txt = tr("share_text");
+  const u = "https://t.me/share/url?url=" + encodeURIComponent(link) + "&text=" + encodeURIComponent(txt);
+  try {
+    if (tg && tg.openTelegramLink) tg.openTelegramLink(u);
+    else if (navigator.share) navigator.share({ url: link, text: txt }).catch(() => {});
+    else window.open(u, "_blank");
+  } catch (e) { window.open(u, "_blank"); }
 };
 
-/* ---- image upload (button, drag & drop, paste) ---- */
+/* ---------- image upload (button, drag & drop, paste) ---------- */
 let curImg = null, curName = "image", curMode = "auto";
 function processImage() {
   if (!curImg) return;
-  setStatus("Kontur qidirilmoqda…", true);
+  setStatus(tr("tracing"), true);
   setTimeout(() => {
     try {
       const detail = +$("detail").value;
@@ -728,18 +872,18 @@ function processImage() {
       if (curMode === "color") f = traceColors(curImg, curName, true);
       else if (curMode === "auto") f = traceColors(curImg, curName, false);
       if (!f) f = traceEdges(curImg, curName, detail);
-      $("traceRow").style.display = $("traceHint").style.display = "flex";
+      $("traceRow").style.display = "flex";
       $("traceHint").style.display = "block";
       loadFlag(f);
-      setStatus(f.raw ? "Tayyor: chiziq rejimi" : "Tayyor: ranglar rejimi", true);
-    } catch (err) { setStatus("Xato: " + err.message); }
+      setStatus(tr(f.raw ? "done_edge" : "done_color"), true);
+    } catch (err) { setStatus(errText(err)); }
   }, 40);
 }
 function handleFile(file) {
-  if (!file || !/^image\//.test(file.type || "image/")) { setStatus("Bu rasm emas"); return; }
-  setStatus("Rasm o'qilmoqda…", true);
+  if (!file || !/^image\//.test(file.type || "image/")) { setStatus(tr("not_image")); return; }
+  setStatus(tr("reading"), true);
   const fr = new FileReader();
-  fr.onerror = () => setStatus("Xato: fayl o'qilmadi");
+  fr.onerror = () => setStatus(tr("err") + ": " + tr("bad_file"));
   fr.onload = () => {
     const img = new Image();
     img.onload = () => {
@@ -749,7 +893,7 @@ function handleFile(file) {
       document.querySelectorAll("#seg button").forEach(b => b.classList.toggle("on", b.dataset.m === "auto"));
       processImage();
     };
-    img.onerror = () => setStatus("Xato: rasm formati qo'llanmaydi");
+    img.onerror = () => setStatus(tr("err") + ": " + tr("bad_format"));
     img.src = fr.result;
   };
   fr.readAsDataURL(file);
@@ -771,17 +915,56 @@ $("seg").addEventListener("click", ev => {
 let detailTimer = 0;
 $("detail").addEventListener("input", () => { clearTimeout(detailTimer); detailTimer = setTimeout(() => { if (curMode !== "color") processImage(); }, 350); });
 
-/* ---- save as video ---- */
+/* ---------- output: video / PNG ---------- */
+const safeName = () => (F.name || "drawing").replace(/[^\w\-]+/g, "_");
+async function deliver(blob, fname, kind) {
+  let saved = false;
+  try {
+    const dl = window.claude && claude.use ? await claude.use("downloads") : null;
+    if (dl) { await dl.save({ filename: fname, data: blob }); saved = true; setStatus(tr("saved", { n: fname }), true); }
+  } catch (err) { setStatus(tr(err && err.code === "declined" ? "declined" : "failed")); }
+  if (saved) return;
+  const url = URL.createObjectURL(blob), box = $("result");
+  box.style.display = "flex";
+  box.innerHTML = (kind === "video" ? '<video controls playsinline></video>' : '<img alt="">') +
+    '<div class="row"><button id="shareBtn" style="display:none"></button><a download></a></div><div class="hint"></div>';
+  box.querySelector(kind === "video" ? "video" : "img").src = url;
+  const a = box.querySelector("a"); a.href = url; a.download = fname; a.textContent = "⬇ " + fname;
+  box.querySelector(".hint").textContent = tr("save_hint");
+  try {
+    const file = new File([blob], fname, { type: blob.type });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      const sb = $("shareBtn"); sb.textContent = tr("share_btn"); sb.style.display = "inline-block";
+      sb.onclick = () => navigator.share({ files: [file], title: fname }).catch(() => {});
+    }
+  } catch (e2) { /* share unsupported */ }
+  if (!$("status").textContent) setStatus(tr("ready"), true);
+  try { box.scrollIntoView({ behavior: "smooth", block: "nearest" }); } catch (e3) { /* old browser */ }
+}
+
+$("png").onclick = async () => {
+  if (recording || !F) return;
+  recording = true;
+  const oldT = T, oldPlay = playing;
+  cv.width = 720; cv.height = 1280; kScale = 1;
+  T = TOTAL; frame();
+  const blob = await new Promise(res => cv.toBlob(res, "image/png"));
+  recording = false; T = oldT; playing = oldPlay; resize();
+  if (blob) deliver(blob, safeName() + ".png", "image");
+};
+
+const BUSY = ["rec", "png", "upload", "play", "restart", "skip", "speed", "scrub", "apply", "customBtn"];
 $("rec").onclick = async () => {
   if (recording) return;
-  if (!window.MediaRecorder || !cv.captureStream) { setStatus("Bu qurilmada video yozish ishlamaydi"); return; }
+  if (!window.MediaRecorder || !cv.captureStream) { setStatus(tr("rec_unsup")); return; }
   const types = ["video/mp4;codecs=avc1.42E01E", "video/mp4", "video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"];
   const mime = types.find(t => MediaRecorder.isTypeSupported(t));
-  if (!mime) { setStatus("Bu qurilmada video formati topilmadi"); return; }
+  if (!mime) { setStatus(tr("rec_nofmt")); return; }
   recording = true;
+  try { if (tg && tg.enableClosingConfirmation) tg.enableClosingConfirmation(); } catch (e) { /* ignore */ }
   const oldSpeed = speedMul; speedMul = 1; $("speed").textContent = "1×";
   cv.width = 720; cv.height = 1280; kScale = 1;
-  ["rec", "upload", "play", "restart", "speed", "scrub", "apply", "customBtn"].forEach(id => $(id).disabled = true);
+  BUSY.forEach(id => $(id).disabled = true);
   $("result").style.display = "none"; $("result").innerHTML = "";
   T = 0; playing = true; scrubbing = false;
   const chunks = [];
@@ -791,7 +974,7 @@ $("rec").onclick = async () => {
   rec.start(500);
   let endAt = 0;
   const timer = setInterval(() => {
-    setStatus(`Yozilmoqda… ${Math.min(100, Math.round(T / TOTAL * 100))}% (sahifani yopmang)`, true);
+    setStatus(tr("rec_prog", { p: Math.min(100, Math.round(T / TOTAL * 100)) }), true);
     if (T >= TOTAL) {
       if (!endAt) endAt = performance.now() + HOLD_END;
       if (performance.now() >= endAt) { clearInterval(timer); rec.stop(); }
@@ -799,45 +982,38 @@ $("rec").onclick = async () => {
   }, 200);
   await finished;
   recording = false; speedMul = oldSpeed; $("speed").textContent = speedMul + "×";
-  ["rec", "upload", "play", "restart", "speed", "scrub", "apply", "customBtn"].forEach(id => $(id).disabled = false);
+  BUSY.forEach(id => $(id).disabled = false);
+  try { if (tg && tg.disableClosingConfirmation) tg.disableClosingConfirmation(); } catch (e) { /* ignore */ }
   resize();
   const ext = mime.indexOf("mp4") >= 0 ? "mp4" : "webm";
   const blob = new Blob(chunks, { type: ext === "mp4" ? "video/mp4" : "video/webm" });
-  const fname = (F.name || "drawing").replace(/[^\w\-]+/g, "_") + "." + ext;
-  let saved = false;
-  try {
-    const dl = window.claude && claude.use ? await claude.use("downloads") : null;
-    if (dl) { await dl.save({ filename: fname, data: blob }); saved = true; setStatus("Video saqlandi: " + fname, true); }
-  } catch (err) {
-    setStatus(err && err.code === "declined" ? "Saqlash bekor qilindi — pastdan videoni oching" : "Saqlab bo'lmadi — pastdan videoni oching");
-  }
-  if (!saved) {
-    // fallback: show the video so it can be saved with a long-press / share menu
-    const url = URL.createObjectURL(blob), box = $("result");
-    box.style.display = "flex";
-    box.innerHTML = '<video controls playsinline></video><div class="row"><button id="shareBtn" style="display:none">📤 Ulashish / saqlash</button><a download></a></div><div class="hint">Saqlash: videoni bosib turing yoki “Ulashish” tugmasini bosing.</div>';
-    box.querySelector("video").src = url;
-    const a = box.querySelector("a"); a.href = url; a.download = fname; a.textContent = "⬇ " + fname;
-    try {
-      const file = new File([blob], fname, { type: blob.type });
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        const sb = $("shareBtn"); sb.style.display = "inline-block";
-        sb.onclick = () => navigator.share({ files: [file], title: "Aylanuvchi doiralar" }).catch(() => {});
-      }
-    } catch (e2) { /* share unsupported */ }
-    if (!$("status").textContent) setStatus("Video tayyor — pastda", true);
-  }
+  setStatus("");
+  await deliver(blob, safeName() + "." + ext, "video");
   T = 0; playing = true; $("play").textContent = "⏸";
 };
 
-try {
-  if (window.Telegram && Telegram.WebApp) {
-    const tg = Telegram.WebApp;
+/* ---------- start ---------- */
+if (tg) {
+  try {
     tg.ready(); tg.expand();
     if (tg.setHeaderColor) tg.setHeaderColor("#0a0a0c");
     if (tg.setBackgroundColor) tg.setBackgroundColor("#0a0a0c");
-  }
-} catch (e) { /* not inside Telegram */ }
+    if (tg.disableVerticalSwipes) tg.disableVerticalSwipes();
+  } catch (e) { /* ignore */ }
+  document.addEventListener("click", ev => {
+    try { if (tg.HapticFeedback && ev.target.closest && ev.target.closest("button")) tg.HapticFeedback.impactOccurred("light"); } catch (e) { /* ignore */ }
+  });
+}
+lang = detectLang();
+applyLang();
+{
+  const lc = store("lc");
+  if (lc && LINE_COLORS.indexOf(lc) >= 0) lineMode = lc;
+  paintSwatches();
+  let w = ""; try { w = new URLSearchParams(location.search).get("wm") || ""; } catch (e) { /* ignore */ }
+  wmText = (w || store("wm") || "").slice(0, 32);
+  $("wm").value = wmText;
+}
 resize();
 requestAnimationFrame(t => { last = t; tick(t); });
 loadFlag(FLAGS[0]);
