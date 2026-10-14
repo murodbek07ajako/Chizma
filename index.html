@@ -6,6 +6,7 @@
 <title>Aylanuvchi doiralar bilan chizish</title>
 <meta name="theme-color" content="#0a0b11">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="config.js"></script>
 <style>
 :root{
   --bg:#0a0b11; --card:#14161f; --card2:#1c1f2c; --fg:#eceef5; --mute:#8e93a6;
@@ -74,6 +75,13 @@ input.cs{-webkit-appearance:none;appearance:none;width:100%;height:16px;border-r
 input.cs::-webkit-slider-thumb{-webkit-appearance:none;width:28px;height:28px;border-radius:50%;background:#fff;border:3px solid #0a0b11;box-shadow:0 0 0 2px #fff}
 input.cs::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:#fff;border:3px solid #0a0b11}
 .hex{font:600 14px ui-monospace,Menlo,monospace;color:var(--mute);text-align:center}
+.share{border-color:#3a4060;background:linear-gradient(180deg,#20243a,#191c2c)}
+.bgs{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.bgs button{position:relative;height:66px;padding:0;border-radius:12px;overflow:hidden;border:2px solid var(--line);background-size:cover}
+.bgs button span{position:absolute;left:0;right:0;bottom:0;padding:3px 2px;font-size:10px;font-weight:600;text-align:center;background:rgba(0,0,0,.55);color:#fff}
+.bgs button.on{border-color:#fff;box-shadow:none}
+.tunes{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tunes button{text-align:left;padding:12px 12px}
 </style>
 </head>
 <body>
@@ -88,6 +96,7 @@ input.cs::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:#
         <button id="skip" class="pill"><span class="ic">⏭</span><span data-i="result"></span></button>
       </div>
       <div class="timeline"><span id="tNow">0:00</span><input type="range" id="scrub" min="0" max="1000" value="0" aria-label="Time"><span id="tAll">0:30</span></div>
+      <div class="timeline"><span data-i="size"></span><input type="range" id="size" min="60" max="140" value="100" aria-label="Size"><span id="sizeVal">100%</span></div>
       <div class="grid2">
         <button id="speed" class="pill"></button>
         <button id="musicBtn" class="pill"></button>
@@ -100,6 +109,7 @@ input.cs::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:#
         <button id="rec" class="pill"><span class="ic">🎬</span><span data-i="rec"></span></button>
         <button id="png" class="pill"><span class="ic">🖼</span><span data-i="png"></span></button>
       </div>
+      <button id="shareApp" class="pill share"><span class="ic">📤</span><span data-i="share"></span></button>
       <div class="hint" data-i="save_note"></div>
       <div class="status" id="status"></div>
       <input class="hide-file" type="file" id="file" accept="image/*">
@@ -123,16 +133,21 @@ input.cs::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:#
     </section>
 
     <section class="card">
+      <h3 data-i="look_title"></h3>
+      <div class="opt"><h4 data-i="bg_t"></h4><p data-i="bg_d"></p><div class="bgs" id="bgs"></div></div>
+      <div class="opt"><h4 data-i="linecolor"></h4><p data-i="linecolor_d"></p><div class="sw" id="sw"></div></div>
+    </section>
+
+    <section class="card">
+      <h3 data-i="music"></h3>
+      <p class="hint" data-i="music_d"></p>
+      <div class="tunes" id="tunes"></div>
+      <div class="hint" id="musicName"></div>
+    </section>
+
+    <section class="card">
       <button class="head" id="setBtn"><span data-i="settings"></span><span id="setChev">▾</span></button>
       <div class="body" id="setBody" hidden>
-        <div class="opt"><h4 data-i="linecolor"></h4><p data-i="linecolor_d"></p><div class="sw" id="sw"></div></div>
-        <div class="opt"><h4 data-i="music"></h4><p data-i="music_d"></p>
-          <div class="seg3" id="musicSeg">
-            <button data-mm="off" data-i="m_off"></button>
-            <button data-mm="gen" data-i="m_gen"></button>
-            <button data-mm="file" data-i="m_file"></button>
-          </div>
-          <div class="hint" id="musicName"></div></div>
         <div class="opt"><h4 data-i="wm"></h4><p data-i="wm_d"></p>
           <input type="text" id="wm" maxlength="32" placeholder="@bot" autocomplete="off"></div>
         <div class="opt"><h4 data-i="lang"></h4>
@@ -143,7 +158,6 @@ input.cs::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:#
     <section class="card">
       <button class="head" id="moreBtn"><span data-i="more"></span><span id="moreChev">▾</span></button>
       <div class="body" id="moreBody" hidden>
-        <div class="opt"><h4 data-i="share"></h4><p data-i="share_d"></p><button id="shareApp" class="pill" data-i="share_go"></button></div>
         <div class="opt"><h4 data-i="json_t"></h4><p data-i="json_d"></p>
           <textarea id="json" spellcheck="false"></textarea><button id="apply" class="pill" data-i="apply"></button></div>
       </div>
@@ -168,11 +182,13 @@ input.cs::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:#
   <div class="sheet">
     <h3 id="resTitle"></h3>
     <div id="resMedia"></div>
+    <button id="resSend" class="main" data-i="res_send" hidden></button>
     <button id="resSave" class="main" data-i="res_save"></button>
     <button id="resShare" class="pill" data-i="res_share"></button>
     <button id="resBrowser" class="pill" data-i="res_browser"></button>
     <div class="status ok" id="resNote"></div>
-    <div class="hint" data-i="res_hint"></div>
+    <button id="resChat" class="pill" data-i="res_chat" hidden></button>
+    <div class="hint" id="resHint"></div>
     <button id="resClose" class="pill" data-i="res_close"></button>
   </div>
 </div>
@@ -189,71 +205,91 @@ const SHOW = 30;
 const RED = "#ff4b3a", DIM = "#b0473f", TEAL = "#86d4bd", AMBER = "#d7ae65";
 const SERIF = 'Georgia, "Times New Roman", serif';
 const SANS = '"DejaVu Sans", Verdana, system-ui, sans-serif';
-const APP_LINK = "";   // masalan: "https://t.me/BOT_USERNAME/chizma" (bo'sh bo'lsa sahifa havolasi ishlatiladi)
-let lang = "uz", lineMode = "#f5f5f5", wmText = "";
+const CFG = window.APP_CONFIG || {};      // config.js faylidan o'qiladi
+const APP_LINK = CFG.APP_LINK || "";      // masalan "https://t.me/BOT_USERNAME/chizma"
+const UPLOAD_URL = CFG.UPLOAD_URL || "";  // Cloudflare Worker manzili (videoni botga yuborish uchun)
+let lang = "uz", lineMode = "#f5f5f5", wmText = "", bgId = "night", sizeMul = 1;
 
 const I18N = {
-  uz: { pause: "Pauza", play: "Davom", replay: "Qayta", result: "Natija", speed: "Tezlik", music_on: "Musiqa: yoniq", music_off: "Musiqa: o'chiq",
+  uz: { size: "🔍 Kattalik", look_title: "🎨 Ko'rinish", bg_t: "Orqa fon", bg_d: "Animatsiya va videoning orqa fonini tanlang.",
+    tune_off: "O'chiq", tune_file: "Mening qo'shig'im", share: "Botni do'stlarga ulashish",
+    res_send: "🤖 Botga yuborish", sending: "Yuborilmoqda… (video katta bo'lsa biroz kuting)",
+    sent_ok: "Yuborildi ✅ Endi botdagi chatni oching: videoni bosib turing → “Galereyaga saqlash”.",
+    send_fail: "Yuborib bo'lmadi", send_start: "Avval botda /start bosing, keyin qayta yuboring.", send_big: "Fayl juda katta (50 MB dan oshdi)",
+    res_chat: "💬 Chatni ochish", caption: "Aylanuvchi doiralar bilan chizildi ✨",
+    res_hint_bot: "“Botga yuborish” videoni shu botdagi chatingizga yuboradi. U yerdan videoni bosib turib Galereyaga saqlaysiz.",
+    pause: "Pauza", play: "Davom", replay: "Qayta", result: "Natija", speed: "Tezlik", music_on: "Musiqa: yoniq", music_off: "Musiqa: o'chiq",
     upload: "Rasm yuklash", upload_sub: "Telefondagi istalgan rasm chiziladi", rec: "Videoga olish", png: "Rasmga olish",
     save_note: "Video musiqa bilan real vaqtda yoziladi (~35 soniya). Tugagach “Saqlash” oynasi chiqadi.",
     how_title: "Rasm qanday chizilsin?", auto: "Avto", auto_d: "o'zi tanlaydi", color: "Ranglar", color_d: "bayroq, logo", edge: "Chiziq", edge_d: "foto, portret",
     detail: "Detal", detail_d: "Ko'proq = batafsilroq, lekin sekinroq (faqat “Chiziq” rejimida).",
     flags_title: "Tayyor bayroqlar",
     settings: "⚙ Sozlamalar", linecolor: "🎨 Chiziq rangi", linecolor_d: "Rasm qaysi rangda chizilishini tanlang. Oxirgi doira — o'z rangingizni yasaysiz.",
-    music: "🎵 Musiqa", music_d: "Animatsiya va video musiqa bilan chiqadi. “Original” — dasturning o'z musiqasi. Yoki o'zingizning qo'shig'ingizni yuklang.",
-    m_off: "O'chiq", m_gen: "Original", m_file: "Mening qo'shig'im",
+    music: "🎵 Musiqa", music_d: "Qo'shiqni tanlang — animatsiya shu musiqa bilan boshidan boshlanadi va video ham musiqa bilan yoziladi. O'z qo'shig'ingizni ham yuklash mumkin.",
     wm: "🏷 Belgi (watermark)", wm_d: "Video va rasmning pastiga yoziladi. Masalan: @botingiz", lang: "🌐 Til",
-    more: "🛠 Qo'shimcha", share: "📤 Botni do'stlarga yuborish", share_d: "Telegramda do'stlaringizga ilova havolasini yuboradi.", share_go: "Yuborish",
+    more: "🛠 Qo'shimcha",
     json_t: "Shakl yasash (ilg'or)", json_d: "Dasturchilar uchun: o'z bayrog'ingizni shakllar (rect, circle, star, crescent, poly) bilan yozing. Koordinatalar markazdan, y pastga o'sadi.", apply: "Chizish",
     cm_title: "O'z rangingizni yarating", cm_hue: "Ton (rang turi)", cm_sat: "To'yinganlik", cm_val: "Yorqinlik", cm_rainbow: "🌈 Kamalak: chiziq bo'ylab rang almashadi", cm_done: "Tayyor",
     res_video: "Video tayyor!", res_png: "Rasm tayyor!", res_save: "💾 Telefonga saqlash", res_share: "📤 Ulashish (Telegram, galereya…)", res_browser: "🌐 Brauzerda ochish", res_close: "Yopish",
     res_hint: "“Telefonga saqlash” faylni Yuklamalar (Galereya) papkasiga tushiradi. Telegram ichida ishlamasa — “Brauzerda ochish” ni bosing va u yerda videoni qayta oling.",
     res_started: "Yuklab olish boshlandi — Yuklamalar yoki Galereyani tekshiring.",
-    music_loading: "Qo'shiq yuklanmoqda…", music_ok: "Qo'shiq: {n}", music_bad: "Audio faylni o'qib bo'lmadi", music_none: "Qo'shiq tanlanmagan — “Mening qo'shig'im” ni bosing",
+    music_loading: "Qo'shiq yuklanmoqda…", music_ok: "Qo'shiq: {n}", music_bad: "Audio faylni o'qib bo'lmadi",
     reading: "Rasm o'qilmoqda…", tracing: "Kontur qidirilmoqda…", done_edge: "Tayyor: chiziq rejimi", done_color: "Tayyor: ranglar rejimi",
     err: "Xato", not_image: "Bu rasm emas", bad_file: "fayl o'qilmadi", bad_format: "rasm formati qo'llanmaydi",
     rec_unsup: "Bu qurilmada video yozish ishlamaydi", rec_nofmt: "Bu qurilmada video formati topilmadi", rec_prog: "Yozilmoqda… {p}% (sahifani yopmang)",
     share_text: "Rasmni aylanuvchi doiralar bilan chizdiring ✨",
     E_NOCOLOR: "Rangli joylar topilmadi", E_NOCONTOUR: "Kontur topilmadi", E_FLAT: "Chiziqlar topilmadi — rasm juda tekis", E_NOLINES: "Chiziqlar topilmadi", E_JSON: "w, h va shapes kerak" },
-  ru: { pause: "Пауза", play: "Играть", replay: "Заново", result: "Итог", speed: "Скорость", music_on: "Музыка: вкл", music_off: "Музыка: выкл",
+  ru: { size: "🔍 Размер", look_title: "🎨 Вид", bg_t: "Фон", bg_d: "Выберите фон анимации и видео.",
+    tune_off: "Выкл", tune_file: "Моя песня", share: "Поделиться ботом с друзьями",
+    res_send: "🤖 Отправить боту", sending: "Отправляю… (подождите, если видео большое)",
+    sent_ok: "Отправлено ✅ Откройте чат с ботом: зажмите видео → «Сохранить в галерею».",
+    send_fail: "Не удалось отправить", send_start: "Сначала нажмите /start в боте, потом отправьте снова.", send_big: "Файл слишком большой (больше 50 МБ)",
+    res_chat: "💬 Открыть чат", caption: "Нарисовано вращающимися кругами ✨",
+    res_hint_bot: "«Отправить боту» присылает видео в ваш чат с ботом. Оттуда зажмите видео и сохраните в галерею.",
+    pause: "Пауза", play: "Играть", replay: "Заново", result: "Итог", speed: "Скорость", music_on: "Музыка: вкл", music_off: "Музыка: выкл",
     upload: "Загрузить картинку", upload_sub: "Любая картинка с телефона будет нарисована", rec: "Записать видео", png: "Сохранить фото",
     save_note: "Видео пишется в реальном времени с музыкой (~35 сек). Потом откроется окно «Сохранить».",
     how_title: "Как рисовать картинку?", auto: "Авто", auto_d: "выберет само", color: "Цвета", color_d: "флаги, логотипы", edge: "Линия", edge_d: "фото, портреты",
     detail: "Детали", detail_d: "Больше = подробнее, но медленнее (только режим «Линия»).",
     flags_title: "Готовые флаги",
     settings: "⚙ Настройки", linecolor: "🎨 Цвет линии", linecolor_d: "Каким цветом рисовать. Последний круг — создайте свой цвет.",
-    music: "🎵 Музыка", music_d: "Анимация и видео идут с музыкой. «Оригинал» — встроенная музыка. Или загрузите свою песню.",
-    m_off: "Выкл", m_gen: "Оригинал", m_file: "Моя песня",
+    music: "🎵 Музыка", music_d: "Выберите мелодию — анимация начнётся сначала с этой музыкой, и видео запишется с ней. Можно загрузить свою песню.",
     wm: "🏷 Подпись (watermark)", wm_d: "Пишется внизу видео и фото. Например: @вашбот", lang: "🌐 Язык",
-    more: "🛠 Дополнительно", share: "📤 Отправить бота друзьям", share_d: "Отправит друзьям в Telegram ссылку на приложение.", share_go: "Отправить",
+    more: "🛠 Дополнительно",
     json_t: "Свои фигуры (для опытных)", json_d: "Опишите флаг фигурами (rect, circle, star, crescent, poly). Координаты от центра, y растёт вниз.", apply: "Рисовать",
     cm_title: "Создайте свой цвет", cm_hue: "Тон (оттенок)", cm_sat: "Насыщенность", cm_val: "Яркость", cm_rainbow: "🌈 Радуга: цвет меняется вдоль линии", cm_done: "Готово",
     res_video: "Видео готово!", res_png: "Фото готово!", res_save: "💾 Сохранить на телефон", res_share: "📤 Поделиться (Telegram, галерея…)", res_browser: "🌐 Открыть в браузере", res_close: "Закрыть",
     res_hint: "«Сохранить на телефон» кладёт файл в Загрузки (Галерею). Если в Telegram не работает — нажмите «Открыть в браузере» и запишите видео там.",
     res_started: "Загрузка началась — проверьте Загрузки или Галерею.",
-    music_loading: "Загружаю песню…", music_ok: "Песня: {n}", music_bad: "Не удалось прочитать аудио", music_none: "Песня не выбрана — нажмите «Моя песня»",
+    music_loading: "Загружаю песню…", music_ok: "Песня: {n}", music_bad: "Не удалось прочитать аудио",
     reading: "Читаю картинку…", tracing: "Ищу контуры…", done_edge: "Готово: режим линии", done_color: "Готово: режим цветов",
     err: "Ошибка", not_image: "Это не картинка", bad_file: "файл не прочитан", bad_format: "формат не поддерживается",
     rec_unsup: "Запись видео не поддерживается", rec_nofmt: "Формат видео не найден", rec_prog: "Запись… {p}% (не закрывайте страницу)",
     share_text: "Нарисуй любую картинку вращающимися кругами ✨",
     E_NOCOLOR: "Цветные области не найдены", E_NOCONTOUR: "Контур не найден", E_FLAT: "Линии не найдены — картинка слишком ровная", E_NOLINES: "Линии не найдены", E_JSON: "нужны w, h и shapes" },
-  en: { pause: "Pause", play: "Play", replay: "Replay", result: "Result", speed: "Speed", music_on: "Music: on", music_off: "Music: off",
+  en: { size: "🔍 Size", look_title: "🎨 Look", bg_t: "Background", bg_d: "Pick the background of the animation and video.",
+    tune_off: "Off", tune_file: "My song", share: "Share the bot with friends",
+    res_send: "🤖 Send to the bot", sending: "Sending… (wait a bit if the video is big)",
+    sent_ok: "Sent ✅ Now open the chat with the bot: press and hold the video → “Save to gallery”.",
+    send_fail: "Could not send", send_start: "Press /start in the bot first, then send again.", send_big: "File is too large (over 50 MB)",
+    res_chat: "💬 Open chat", caption: "Drawn with spinning circles ✨",
+    res_hint_bot: "“Send to the bot” sends the video to your chat with the bot. Press and hold it there to save to the gallery.",
+    pause: "Pause", play: "Play", replay: "Replay", result: "Result", speed: "Speed", music_on: "Music: on", music_off: "Music: off",
     upload: "Upload a picture", upload_sub: "Any picture from your phone gets drawn", rec: "Record video", png: "Save picture",
     save_note: "The video is recorded live with music (~35 s). A “Save” window opens when it ends.",
     how_title: "How should it be drawn?", auto: "Auto", auto_d: "picks for you", color: "Colors", color_d: "flags, logos", edge: "Line", edge_d: "photos, portraits",
     detail: "Detail", detail_d: "More = more detailed but slower (“Line” mode only).",
     flags_title: "Ready-made flags",
     settings: "⚙ Settings", linecolor: "🎨 Line color", linecolor_d: "Pick the drawing color. The last circle lets you create your own.",
-    music: "🎵 Music", music_d: "The animation and video come with music. “Original” is the built-in tune. Or upload your own song.",
-    m_off: "Off", m_gen: "Original", m_file: "My song",
+    music: "🎵 Music", music_d: "Pick a tune — the animation restarts with it and the video is recorded with it. You can also upload your own song.",
     wm: "🏷 Watermark", wm_d: "Printed at the bottom of the video and picture. E.g. @yourbot", lang: "🌐 Language",
-    more: "🛠 More", share: "📤 Send the bot to friends", share_d: "Sends the app link to your friends in Telegram.", share_go: "Send",
+    more: "🛠 More",
     json_t: "Custom shapes (advanced)", json_d: "Describe a flag with shapes (rect, circle, star, crescent, poly). Coordinates from center, y grows downward.", apply: "Draw",
     cm_title: "Create your own color", cm_hue: "Hue", cm_sat: "Saturation", cm_val: "Brightness", cm_rainbow: "🌈 Rainbow: color changes along the line", cm_done: "Done",
     res_video: "Video ready!", res_png: "Picture ready!", res_save: "💾 Save to phone", res_share: "📤 Share (Telegram, gallery…)", res_browser: "🌐 Open in browser", res_close: "Close",
     res_hint: "“Save to phone” puts the file in Downloads (Gallery). If that does not work inside Telegram, tap “Open in browser” and record there.",
     res_started: "Download started — check Downloads or Gallery.",
-    music_loading: "Loading song…", music_ok: "Song: {n}", music_bad: "Could not read the audio file", music_none: "No song selected — tap “My song”",
+    music_loading: "Loading song…", music_ok: "Song: {n}", music_bad: "Could not read the audio file",
     reading: "Reading picture…", tracing: "Finding outlines…", done_edge: "Done: line mode", done_color: "Done: color mode",
     err: "Error", not_image: "Not a picture", bad_file: "file could not be read", bad_format: "unsupported image format",
     rec_unsup: "Video recording is not supported here", rec_nofmt: "No video format found", rec_prog: "Recording… {p}% (keep this page open)",
@@ -771,17 +807,61 @@ function drawTrace(sd, f, fcx, fcy, s, alpha, jumpA = 1) {
 
 /* ---------- main frame ---------- */
 let T = 0, playing = true, speedMul = 1, last = performance.now(), scrubbing = false;
-function drawBackdrop() {
+function bgGrad(stops) {
   const g = ctx.createLinearGradient(0, 0, 0, 1280);
-  g.addColorStop(0, "#0c0e18"); g.addColorStop(1, "#09090c");
+  stops.forEach(([o, col]) => g.addColorStop(o, col));
   ctx.fillStyle = g; ctx.fillRect(0, 0, 720, 1280);
-  const r = ctx.createRadialGradient(440, 690, 20, 440, 690, 560);
-  r.addColorStop(0, "rgba(255,110,90,0.11)"); r.addColorStop(1, "rgba(255,110,90,0)");
-  ctx.fillStyle = r; ctx.fillRect(0, 0, 720, 1280);
-  for (let i = 0; i < 44; i++) {
+}
+function bgGlow(x, y, r, rgb, a) {
+  const g = ctx.createRadialGradient(x, y, 10, x, y, r);
+  g.addColorStop(0, `rgba(${rgb},${a})`); g.addColorStop(1, `rgba(${rgb},0)`);
+  ctx.fillStyle = g; ctx.fillRect(0, 0, 720, 1280);
+}
+function bgStars(n, k, sz) {
+  for (let i = 0; i < n; i++) {
     const x = (i * 97.3) % 720, y = (i * 211.7) % 1280;
-    ctx.fillStyle = `rgba(255,255,255,${0.12 + 0.26 * Math.abs(Math.sin(T / 1100 + i * 1.7))})`;
-    ctx.fillRect(x, y, 2, 2);
+    ctx.fillStyle = `rgba(255,255,255,${0.12 + 0.26 * k * Math.abs(Math.sin(T / 1100 + i * 1.7))})`;
+    ctx.fillRect(x, y, sz, sz);
+  }
+}
+function bgRise(n, speed, rad, rgb, a, ring) {
+  for (let i = 0; i < n; i++) {
+    const y = 1340 - ((T * speed + i * 163) % 1400), x = (i * 83.7 + 26 * Math.sin(T / 900 + i)) % 720;
+    const rr = rad * (0.5 + ((i * 37) % 10) / 10);
+    ctx.beginPath(); ctx.arc(x, y, rr, 0, TAU);
+    if (ring) { ctx.strokeStyle = `rgba(${rgb},${a})`; ctx.lineWidth = 1.5; ctx.stroke(); }
+    else { ctx.fillStyle = `rgba(${rgb},${a})`; ctx.fill(); }
+  }
+}
+function bgGrid(step, a, rgb) {
+  ctx.strokeStyle = `rgba(${rgb},${a})`; ctx.lineWidth = 1; ctx.beginPath();
+  for (let x = 0; x <= 720; x += step) { ctx.moveTo(x, 0); ctx.lineTo(x, 1280); }
+  for (let y = 0; y <= 1280; y += step) { ctx.moveTo(0, y); ctx.lineTo(720, y); }
+  ctx.stroke();
+}
+function bgBands() {
+  const cols = ["rgba(60,255,170,0.10)", "rgba(80,180,255,0.09)", "rgba(190,110,255,0.08)"];
+  for (let k = 0; k < 3; k++) {
+    ctx.beginPath();
+    for (let x = 0; x <= 720; x += 20) {
+      const y = 360 + k * 130 + 46 * Math.sin(x / 120 + T / 1700 + k * 2.1) + 24 * Math.sin(x / 57 + T / 900 + k);
+      if (x) ctx.lineTo(x, y); else ctx.moveTo(x, y);
+    }
+    ctx.strokeStyle = cols[k]; ctx.lineWidth = 80; ctx.lineJoin = "round"; ctx.stroke();
+  }
+}
+function drawBackdrop() {
+  switch (bgId) {
+    case "space": bgGrad([[0, "#0b0724"], [1, "#04030c"]]); bgGlow(140, 300, 430, "130,80,255", 0.2); bgGlow(610, 860, 470, "40,140,255", 0.15); bgStars(90, 1.2, 2); break;
+    case "neon": bgGrad([[0, "#12032a"], [1, "#06020e"]]); bgGlow(110, 250, 430, "255,40,200", 0.22); bgGlow(630, 930, 470, "0,220,255", 0.17); bgGrid(90, 0.07, "255,90,230"); break;
+    case "ocean": bgGrad([[0, "#05303f"], [1, "#020c12"]]); bgGlow(360, 60, 520, "60,210,230", 0.14); bgRise(18, 0.045, 12, "150,230,255", 0.28, true); break;
+    case "sunset": bgGrad([[0, "#26103f"], [0.55, "#7a2550"], [0.82, "#2a0c1c"], [1, "#09050a"]]); bgGlow(360, 760, 420, "255,150,70", 0.28); break;
+    case "forest": bgGrad([[0, "#06180f"], [1, "#020805"]]); bgGlow(200, 420, 460, "60,200,110", 0.13); bgRise(26, 0.02, 3, "220,255,130", 0.55, false); break;
+    case "fire": bgGrad([[0, "#1c0504"], [1, "#070101"]]); bgGlow(360, 1240, 720, "255,90,20", 0.22); bgRise(34, 0.07, 2.6, "255,170,70", 0.7, false); break;
+    case "aurora": bgGrad([[0, "#040d22"], [1, "#02050e"]]); bgBands(); bgStars(40, 0.8, 2); break;
+    case "blueprint": bgGrad([[0, "#0b2d63"], [1, "#061a3e"]]); bgGrid(60, 0.08, "255,255,255"); bgGrid(300, 0.1, "255,255,255"); break;
+    case "mono": ctx.fillStyle = "#000"; ctx.fillRect(0, 0, 720, 1280); break;
+    default: bgGrad([[0, "#0c0e18"], [1, "#09090c"]]); bgGlow(440, 690, 560, "255,110,90", 0.11); bgStars(44, 1, 2);
   }
 }
 function frame() {
@@ -789,7 +869,7 @@ function frame() {
   ctx.setTransform(kScale, 0, 0, kScale, 0, 0);
   drawBackdrop();
 
-  const sDraw = Math.min(380 / F.w, 300 / F.h), sFin = Math.min(580 / F.w, 460 / F.h);
+  const sDraw = Math.min(380 * sizeMul / F.w, 300 * sizeMul / F.h, 640 / F.w), sFin = Math.min(580 * sizeMul / F.w, 460 * sizeMul / F.h, 700 / F.w);
   let stageIdx = -1, prog = 0, u = 0, mode = "intro";
   if (T >= INTRO) {
     const q = T - INTRO;
@@ -876,26 +956,34 @@ function updateClock() {
 }
 function setPlayUI(p) { $("playIc").textContent = p ? "⏸" : "▶"; $("playLbl").textContent = tr(p ? "pause" : "play"); }
 function updateSpeedUI() { $("speed").textContent = "⚡ " + tr("speed") + ": " + speedMul + "×"; }
-function updateMusicUI() {
-  $("musicBtn").textContent = "🎵 " + tr(music.mode !== "off" ? "music_on" : "music_off");
-  document.querySelectorAll("#musicSeg button").forEach(b => b.classList.toggle("on", b.dataset.mm === music.mode));
-}
 
-/* ---------- music: original generated tune, or the user's own file ---------- */
+/* ---------- music: 8 original tunes (generated in the browser) or the user's own song ---------- */
+const TUNES = [
+  { id: "mystic", n: { uz: "Sirli", ru: "Тайна", en: "Mystic" }, scale: [0,3,5,7,10,12,15,17,19,22,24], roots: [0,-4,-2,-5,0,3,-2,0], wave: "triangle", padw: ["sine","triangle"], base: 6, grow: 2, decay: 0.55, bass: "hit", pv: 1, up: 12 },
+  { id: "happy", n: { uz: "Quvnoq", ru: "Весёлая", en: "Happy" }, scale: [0,2,4,7,9,12,14,16,19,21,24], roots: [3,8,10,0,3,8,10,15], wave: "triangle", padw: ["sine","triangle"], base: 8, grow: 3, decay: 0.32, bass: "pulse", pv: 1, up: 12 },
+  { id: "ocean", n: { uz: "Dengiz", ru: "Море", en: "Ocean" }, scale: [0,2,4,6,7,9,11,12,14,16,18], roots: [5,3,0,7,5,3,0,5], wave: "sine", padw: ["sine","sine"], base: 4, grow: 1, decay: 1.2, bass: "hit", pv: 1.25, up: 12 },
+  { id: "space", n: { uz: "Kosmik", ru: "Космос", en: "Cosmic" }, scale: [0,3,5,7,10,12,15,17,19,22], roots: [7,5,3,2,7,5,3,7], wave: "sine", padw: ["sine","triangle"], base: 5, grow: 2, decay: 1.5, bass: "hit", pv: 1.2, up: 24 },
+  { id: "east", n: { uz: "Sharq", ru: "Восток", en: "Eastern" }, scale: [0,1,4,5,7,8,11,12,13,16,17], roots: [2,2,0,2,2,5,0,2], wave: "triangle", padw: ["triangle","sine"], base: 8, grow: 3, decay: 0.4, bass: "pulse", pv: 1.1, up: 12 },
+  { id: "retro", n: { uz: "Retro", ru: "Ретро", en: "Retro" }, scale: [0,2,4,7,9,12,14,16,19,21,24], roots: [3,3,8,10,3,3,10,8], wave: "square", padw: ["triangle","triangle"], base: 10, grow: 3, decay: 0.18, bass: "pulse", bassWave: "square", pv: 0.5, up: 12 },
+  { id: "calm", n: { uz: "Yumshoq", ru: "Спокойная", en: "Calm" }, scale: [0,4,7,11,12,14,16,19,23,24,28], roots: [8,3,5,0,8,3,5,10], wave: "sine", padw: ["sine","sine"], base: 4, grow: 1, decay: 1.0, bass: "hit", pv: 1.3, up: 12 },
+  { id: "epic", n: { uz: "Epik", ru: "Эпик", en: "Epic" }, scale: [0,2,3,5,7,8,10,12,14,15,17], roots: [5,1,8,3,5,1,8,3], wave: "triangle", padw: ["triangle","sine"], base: 8, grow: 3, decay: 0.5, bass: "pulse", pv: 1.1, up: 12, big: true }
+];
 const music = {
-  mode: "gen", ctx: null, bus: null, src: null, fileBuf: null, fileName: "", pending: false, _ev: null,
+  mode: "gen", tune: "mystic", lastMode: "gen", ctx: null, bus: null, src: null, fileBuf: null, fileName: "", pending: false, _ev: null, _evKey: "",
   ensure() {
     if (!this.ctx) {
       const AC = window.AudioContext || window.webkitAudioContext;
       if (!AC) return false;
       const c = this.ctx = new AC();
       this.master = c.createGain(); this.master.gain.value = 0.9;
+      const lp = c.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 5200;
       const dl = c.createDelay(1); dl.delayTime.value = 0.28;
       const fb = c.createGain(); fb.gain.value = 0.32;
       const wet = c.createGain(); wet.gain.value = 0.35;
       this.out = c.createGain();
-      this.master.connect(this.out);
-      this.master.connect(dl); dl.connect(fb); fb.connect(dl); dl.connect(wet); wet.connect(this.out);
+      this.master.connect(lp);
+      lp.connect(this.out);
+      lp.connect(dl); dl.connect(fb); fb.connect(dl); dl.connect(wet); wet.connect(this.out);
       this.out.connect(c.destination);
       this.recDest = c.createMediaStreamDestination();
       this.out.connect(this.recDest);
@@ -940,26 +1028,30 @@ const music = {
     }
   },
   events() {
-    if (this._ev) return this._ev;
+    const tn = TUNES.find(x => x.id === this.tune) || TUNES[0];
+    const key = tn.id + "|" + STAGES.length;
+    if (this._ev && this._evKey === key) return this._ev;
     const ev = [], S = STAGES.length;
     const f = st => 220 * Math.pow(2, st / 12);
-    const scale = [0, 3, 5, 7, 10, 12, 15, 17, 19, 22, 24];
-    const roots = [0, -4, -2, -5, 0, 3, -2, 0];
-    ev.push({ k: "pad", t: 0, d: INTRO / 1000 + 0.4, f: [f(-12), f(0), f(7)], v: 0.05 });
+    const padV = tn.big ? 0.065 : 0.05, r0 = tn.roots[0];
+    ev.push({ k: "pad", t: 0, d: INTRO / 1000 + 0.4, f: [f(r0 - 12), f(r0), f(r0 + 7)], v: padV, w: tn.padw });
     for (let i = 0; i < S; i++) {
-      const t0 = INTRO + i * STAGE_T, r = roots[i % roots.length];
-      ev.push({ k: "pad", t: t0, d: STAGE_T / 1000 + 0.5, f: [f(r - 12), f(r), f(r + 7), f(r + 12)], v: 0.05 + i * 0.004 });
-      ev.push({ k: "bass", t: t0, d: 0.9, f: [f(r - 24)], v: 0.2 });
-      ev.push({ k: "pluck", t: t0, d: 1.1, f: [f(r + 24)], v: 0.07 });
-      const steps = 6 + i * 2;
+      const t0 = INTRO + i * STAGE_T, r = tn.roots[i % tn.roots.length];
+      ev.push({ k: "pad", t: t0, d: STAGE_T / 1000 + 0.5, f: [f(r - 12), f(r), f(r + 7), f(r + 12)], v: padV + i * 0.004, w: tn.padw });
+      if (tn.bass === "pulse") for (let b = 0; b < 8; b++) ev.push({ k: "bass", t: t0 + b * 460, d: 0.34, f: [f(r - 24)], v: 0.15, w: [tn.bassWave || "sine"] });
+      else ev.push({ k: "bass", t: t0, d: 0.9, f: [f(r - 24)], v: 0.2, w: [tn.bassWave || "sine"] });
+      ev.push({ k: "pluck", t: t0, d: 1.1, f: [f(r + tn.up + 12)], v: 0.07 * tn.pv, w: [tn.wave] });
+      const steps = tn.base + i * tn.grow;
       for (let s = 0; s < steps; s++) {
-        ev.push({ k: "pluck", t: t0 + 250 + (s / steps) * (DRAW_T - 250), d: 0.55, f: [f(r + scale[(s * 2 + i * 3) % scale.length] + 12)], v: 0.085 });
+        ev.push({ k: "pluck", t: t0 + 250 + (s / steps) * (DRAW_T - 250), d: tn.decay,
+          f: [f(r + tn.scale[(s * 2 + i * 3) % tn.scale.length] + 12)], v: 0.085 * tn.pv, w: [tn.wave] });
       }
     }
     const tf = INTRO + S * STAGE_T;
-    ev.push({ k: "pad", t: tf, d: 4.5, f: [f(-12), f(0), f(4), f(7), f(12), f(16)], v: 0.07 });
-    ev.push({ k: "bass", t: tf, d: 2, f: [f(-24)], v: 0.22 });
-    [0, 4, 7, 12, 16, 19, 24, 28].forEach((n, k) => ev.push({ k: "pluck", t: tf + 80 + k * 130, d: 1.2, f: [f(n + 12)], v: 0.08 }));
+    ev.push({ k: "pad", t: tf, d: 4.5, f: [f(r0 - 12), f(r0), f(r0 + 4), f(r0 + 7), f(r0 + 12), f(r0 + 16)], v: 0.07, w: tn.padw });
+    ev.push({ k: "bass", t: tf, d: 2, f: [f(r0 - 24)], v: 0.22, w: [tn.bassWave || "sine"] });
+    [0, 4, 7, 12, 16, 19, 24, 28].forEach((n, k) => ev.push({ k: "pluck", t: tf + 80 + k * 130, d: 1.2, f: [f(r0 + n + 12)], v: 0.08 * tn.pv, w: [tn.wave] }));
+    this._evKey = key;
     return (this._ev = ev);
   },
   voice(ev, when, dur) {
@@ -977,7 +1069,7 @@ const music = {
     }
     ev.f.forEach((fr, i) => {
       const o = c.createOscillator();
-      o.type = ev.k === "pad" ? (i % 2 ? "triangle" : "sine") : ev.k === "bass" ? "sine" : "triangle";
+      o.type = ev.w[i % ev.w.length];
       o.frequency.value = fr;
       if (ev.k === "pad") o.detune.value = (i - 1.5) * 4;
       o.connect(env); o.start(when); o.stop(when + dur + 0.1);
@@ -988,6 +1080,35 @@ function syncMusic() {
   if (recording) return;
   if (playing && T < TOTAL) music.start(T, speedMul); else if (!playing) music.stop();
 }
+function restartPlayback() { T = 0; playing = true; setPlayUI(true); syncMusic(); }
+function musicId() { return music.mode === "off" ? "off" : music.mode === "file" ? "file" : music.tune; }
+function updateMusicUI() {
+  $("musicBtn").textContent = "🎵 " + tr(music.mode !== "off" ? "music_on" : "music_off");
+  document.querySelectorAll("#tunes button").forEach(b => b.classList.toggle("on", b.dataset.mt === musicId()));
+}
+function buildTunes() {
+  const box = $("tunes"); box.innerHTML = "";
+  const mk = (id, label) => {
+    const b = document.createElement("button");
+    b.dataset.mt = id; b.textContent = label;
+    b.onclick = () => chooseMusic(id);
+    box.appendChild(b);
+  };
+  mk("off", "🔇 " + tr("tune_off"));
+  TUNES.forEach(t => mk(t.id, "🎼 " + t.n[lang]));
+  mk("file", "📁 " + tr("tune_file"));
+  updateMusicUI();
+}
+function chooseMusic(id) {
+  if (id === "file") {
+    if (!music.fileBuf) { $("audioFile").value = ""; $("audioFile").click(); return; }
+    music.mode = "file";
+  } else if (id === "off") music.mode = "off";
+  else { music.mode = "gen"; music.tune = id; }
+  store("mt", id);
+  updateMusicUI();
+  if (!recording) restartPlayback();
+}
 async function loadSong(file) {
   if (!file) return;
   setStatus(tr("music_loading"), true);
@@ -995,10 +1116,10 @@ async function loadSong(file) {
     if (!music.ensure()) throw new Error("no audio");
     const buf = await music.ctx.decodeAudioData(await file.arrayBuffer());
     music.fileBuf = buf; music.fileName = file.name || "song"; music.mode = "file";
-    store("mm", "file");
+    store("mt", "file");
     $("musicName").textContent = tr("music_ok", { n: music.fileName });
     setStatus("");
-    updateMusicUI(); syncMusic();
+    updateMusicUI(); restartPlayback();
   } catch (e) { setStatus(tr("music_bad")); }
 }
 
@@ -1038,6 +1159,31 @@ const inTg = !!(tg && tg.initData);
 const PRESET_COLORS = ["#f5f5f5", "#ffd166", "#7dd3fc", "#ff7eb6", "#86efac"];
 let customColor = "", hsv = { h: 20, s: 80, v: 100 };
 
+const BGS = [
+  { id: "night", n: { uz: "Tun", ru: "Ночь", en: "Night" }, css: "linear-gradient(#0c0e18,#09090c)" },
+  { id: "space", n: { uz: "Kosmos", ru: "Космос", en: "Space" }, css: "radial-gradient(circle at 30% 30%,#3b2a9a,#05030f 70%)" },
+  { id: "neon", n: { uz: "Neon", ru: "Неон", en: "Neon" }, css: "linear-gradient(135deg,#ff28c8,#0a0220 50%,#00dcff)" },
+  { id: "ocean", n: { uz: "Okean", ru: "Океан", en: "Ocean" }, css: "linear-gradient(#0a6a88,#020e16)" },
+  { id: "sunset", n: { uz: "Quyosh", ru: "Закат", en: "Sunset" }, css: "linear-gradient(#2a0f3d,#c4472f 60%,#12080c)" },
+  { id: "forest", n: { uz: "O'rmon", ru: "Лес", en: "Forest" }, css: "linear-gradient(#0f5a30,#020a06)" },
+  { id: "fire", n: { uz: "Olov", ru: "Огонь", en: "Fire" }, css: "linear-gradient(#150303,#9a3208)" },
+  { id: "aurora", n: { uz: "Aurora", ru: "Аврора", en: "Aurora" }, css: "linear-gradient(#030b1c,#2eff9a 55%,#6a5cff)" },
+  { id: "blueprint", n: { uz: "Chizma", ru: "Чертёж", en: "Blueprint" }, css: "linear-gradient(#0b2d63,#061a3e)" },
+  { id: "mono", n: { uz: "Qora", ru: "Чёрный", en: "Black" }, css: "#000" }
+];
+function buildBgs() {
+  const box = $("bgs"); box.innerHTML = "";
+  BGS.forEach(bg => {
+    const b = document.createElement("button");
+    b.dataset.b = bg.id; b.style.background = bg.css;
+    b.innerHTML = "<span></span>"; b.firstChild.textContent = bg.n[lang];
+    b.onclick = () => { bgId = bg.id; store("bg", bgId); paintBgs(); };
+    box.appendChild(b);
+  });
+  paintBgs();
+}
+function paintBgs() { document.querySelectorAll("#bgs button").forEach(b => b.classList.toggle("on", b.dataset.b === bgId)); }
+
 function hsv2hex(h, s, v) {
   s /= 100; v /= 100;
   const c = v * s, x = c * (1 - Math.abs((h / 60) % 2 - 1)), m = v - c;
@@ -1066,7 +1212,7 @@ function applyLang() {
   document.documentElement.lang = lang;
   document.querySelectorAll("[data-i]").forEach(el => { el.textContent = tr(el.dataset.i); });
   document.querySelectorAll("#langSeg button").forEach(b => b.classList.toggle("on", b.dataset.l === lang));
-  setPlayUI(playing); updateSpeedUI(); updateMusicUI();
+  setPlayUI(playing); updateSpeedUI(); buildTunes(); buildBgs();
   if (music.fileName) $("musicName").textContent = tr("music_ok", { n: music.fileName });
 }
 const swBox = $("sw");
@@ -1124,7 +1270,7 @@ $("colorModal").addEventListener("click", ev => { if (ev.target === $("colorModa
 
 /* ---------- playback controls ---------- */
 $("play").onclick = () => { if (recording) return; if (T >= TOTAL) T = 0; playing = !playing; setPlayUI(playing); syncMusic(); };
-$("restart").onclick = () => { if (recording) return; T = 0; playing = true; setPlayUI(true); syncMusic(); };
+$("restart").onclick = () => { if (recording) return; restartPlayback(); };
 $("skip").onclick = () => { if (recording) return; T = TOTAL; playing = false; setPlayUI(false); syncMusic(); };
 $("speed").onclick = () => {
   if (recording) return;
@@ -1132,26 +1278,20 @@ $("speed").onclick = () => {
   updateSpeedUI(); syncMusic();
 };
 $("musicBtn").onclick = () => {
-  if (music.mode === "off") { music.mode = store("mm") === "file" && music.fileBuf ? "file" : "gen"; }
-  else music.mode = "off";
-  store("mm", music.mode === "off" ? (store("mm") || "gen") : music.mode);
-  updateMusicUI(); syncMusic();
+  if (music.mode === "off") music.mode = (music.lastMode === "file" && music.fileBuf) ? "file" : "gen";
+  else { music.lastMode = music.mode; music.mode = "off"; }
+  store("mt", musicId()); updateMusicUI(); syncMusic();
 };
-$("musicSeg").addEventListener("click", ev => {
-  const b = ev.target.closest("button"); if (!b) return;
-  const m = b.dataset.mm;
-  if (m === "file") { if (music.fileBuf && music.mode !== "file") { music.mode = "file"; updateMusicUI(); syncMusic(); } else { $("audioFile").value = ""; $("audioFile").click(); } return; }
-  music.mode = m; store("mm", m); updateMusicUI(); syncMusic();
-});
 $("audioFile").addEventListener("change", ev => loadSong(ev.target.files && ev.target.files[0]));
 const sc = $("scrub");
 sc.addEventListener("input", () => { if (recording) return; if (!scrubbing) music.stop(); scrubbing = true; T = sc.value / 1000 * TOTAL; });
 ["change", "pointerup", "touchend"].forEach(ev => sc.addEventListener(ev, () => { if (scrubbing) { scrubbing = false; syncMusic(); } }));
-function toggleBody(btn, body, chev) {
-  const open = $(body).hidden; $(body).hidden = !open; $(chev).textContent = open ? "▴" : "▾";
-}
-$("setBtn").onclick = () => toggleBody("setBtn", "setBody", "setChev");
-$("moreBtn").onclick = () => toggleBody("moreBtn", "moreBody", "moreChev");
+$("size").addEventListener("input", () => {
+  sizeMul = +$("size").value / 100; $("sizeVal").textContent = Math.round(sizeMul * 100) + "%"; store("sz", String(sizeMul));
+});
+function toggleBody(body, chev) { const open = $(body).hidden; $(body).hidden = !open; $(chev).textContent = open ? "▴" : "▾"; }
+$("setBtn").onclick = () => toggleBody("setBody", "setChev");
+$("moreBtn").onclick = () => toggleBody("moreBody", "moreChev");
 $("apply").onclick = () => {
   try {
     const spec = JSON.parse($("json").value);
@@ -1230,13 +1370,36 @@ $("seg").addEventListener("click", ev => {
 let detailTimer = 0;
 $("detail").addEventListener("input", () => { clearTimeout(detailTimer); detailTimer = setTimeout(() => { if (curMode !== "color") processImage(); }, 350); });
 
-/* ---------- output: video / PNG with a clear "Save" window ---------- */
+/* ---------- output: video / PNG -> sent to the bot chat (or saved) ---------- */
 const safeName = () => (F.name || "drawing").replace(/[^\w\-]+/g, "_");
 function downloadBlob(url, fname) {
   const a = document.createElement("a");
   a.href = url; a.download = fname; a.style.display = "none";
   document.body.appendChild(a); a.click();
   setTimeout(() => { try { a.remove(); } catch (e) { /* ignore */ } }, 1500);
+}
+function setNote(text, ok) { const n = $("resNote"); n.textContent = text || ""; n.className = "status" + (ok ? " ok" : ""); }
+async function sendToBot(blob, kind) {
+  const btn = $("resSend"); btn.disabled = true; setNote(tr("sending"), true);
+  try {
+    if (blob.size > 49 * 1024 * 1024) throw new Error("big");
+    const fd = new FormData();
+    fd.append("initData", tg.initData);
+    fd.append("kind", kind);
+    fd.append("duration", String(Math.round(TOTAL / 1000)));
+    fd.append("caption", tr("caption") + (wmText ? "\n" + wmText : ""));
+    fd.append("file", blob, kind === "image" ? "drawing.png" : "drawing.mp4");
+    const r = await fetch(UPLOAD_URL, { method: "POST", body: fd });
+    let j = null; try { j = await r.json(); } catch (e) { /* not json */ }
+    if (!r.ok || !j || !j.ok) throw new Error((j && (j.error_text || j.error)) || ("HTTP " + r.status));
+    setNote(tr("sent_ok"), true); $("resChat").hidden = false;
+    try { if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success"); } catch (e) { /* ignore */ }
+  } catch (e) {
+    const msg = String(e && e.message || e);
+    if (msg === "big") setNote(tr("send_big"));
+    else if (/initiate|blocked|forbidden|chat not found|403/i.test(msg)) setNote(tr("send_start"));
+    else setNote(tr("send_fail") + ": " + msg);
+  } finally { btn.disabled = false; }
 }
 let resUrl = null;
 function deliver(blob, fname, kind) {
@@ -1250,17 +1413,24 @@ function deliver(blob, fname, kind) {
   let file = null;
   try { file = new File([blob], fname, { type: blob.type }); } catch (e) { /* old browser */ }
   const canShare = !!(file && navigator.canShare && navigator.canShare({ files: [file] }));
+  const canSend = !!(UPLOAD_URL && tg && tg.initData);
+  $("resSend").hidden = !canSend;
+  $("resChat").hidden = true;
+  $("resSave").className = canSend ? "pill" : "main";
   $("resShare").hidden = !canShare;
-  $("resBrowser").hidden = !inTg;
-  $("resNote").textContent = "";
-  $("resSave").onclick = () => { downloadBlob(resUrl, fname); $("resNote").textContent = tr("res_started"); };
+  $("resBrowser").hidden = !inTg || canSend;
+  $("resHint").textContent = tr(canSend ? "res_hint_bot" : "res_hint");
+  setNote("");
+  $("resSend").onclick = () => sendToBot(blob, kind);
+  $("resChat").onclick = () => { try { tg.close(); } catch (e) { /* ignore */ } };
+  $("resSave").onclick = () => { downloadBlob(resUrl, fname); setNote(tr("res_started"), true); };
   $("resShare").onclick = () => { navigator.share({ files: [file], title: fname }).catch(() => {}); };
   $("resBrowser").onclick = () => {
     const u = location.href.split("#")[0];
     try { if (tg && tg.openLink) tg.openLink(u, { try_instant_view: false }); else window.open(u, "_blank"); } catch (e) { window.open(u, "_blank"); }
   };
   $("resModal").hidden = false;
-  try { downloadBlob(resUrl, fname); } catch (e) { /* needs a tap — button is there */ }
+  if (!canSend) { try { downloadBlob(resUrl, fname); } catch (e) { /* needs a tap */ } }
 }
 $("resClose").onclick = () => { $("resModal").hidden = true; const v = $("resMedia").querySelector("video"); if (v) v.pause(); };
 $("resModal").addEventListener("click", ev => { if (ev.target === $("resModal")) $("resClose").onclick(); });
@@ -1276,14 +1446,14 @@ $("png").onclick = async () => {
   if (blob) deliver(blob, safeName() + ".png", "image");
 };
 
-const BUSY = ["rec", "png", "upload", "play", "restart", "skip", "speed", "musicBtn", "scrub", "apply"];
+const BUSY = ["rec", "png", "upload", "play", "restart", "skip", "speed", "musicBtn", "scrub", "apply", "size"];
 $("rec").onclick = async () => {
   if (recording) return;
   if (!window.MediaRecorder || !cv.captureStream) { setStatus(tr("rec_unsup")); return; }
   let wantAudio = false;
   if (music.mode !== "off" && music.ensure() && (music.mode === "gen" || music.fileBuf)) {
     try { await music.ctx.resume(); wantAudio = music.ctx.state === "running"; } catch (e) { wantAudio = false; }
-  } else if (music.mode === "file" && !music.fileBuf) setStatus(tr("music_none"));
+  }
   const types = wantAudio
     ? ["video/mp4;codecs=avc1.42E01E,mp4a.40.2", "video/mp4", "video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm"]
     : ["video/mp4;codecs=avc1.42E01E", "video/mp4", "video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"];
@@ -1343,10 +1513,13 @@ if (tg) {
 
 lang = detectLang();
 {
-  const lc = store("lc"), cc = store("cc"), mm = store("mm");
+  const lc = store("lc"), cc = store("cc"), mt = store("mt"), bg = store("bg"), sz = parseFloat(store("sz"));
   if (cc && /^#[0-9a-f]{6}$/i.test(cc)) { customColor = cc; hsv = hex2hsv(cc); }
   if (lc && (lc === "rainbow" || PRESET_COLORS.indexOf(lc) >= 0 || /^#[0-9a-f]{6}$/i.test(lc))) lineMode = lc;
-  if (mm === "off" || mm === "gen") music.mode = mm;
+  if (mt === "off") music.mode = "off";
+  else if (mt && TUNES.some(t => t.id === mt)) music.tune = mt;
+  if (bg && BGS.some(b => b.id === bg)) bgId = bg;
+  if (sz >= 0.6 && sz <= 1.4) { sizeMul = sz; $("size").value = Math.round(sz * 100); $("sizeVal").textContent = Math.round(sz * 100) + "%"; }
   let w = ""; try { w = new URLSearchParams(location.search).get("wm") || ""; } catch (e) { /* ignore */ }
   wmText = (w || store("wm") || "").slice(0, 32);
   $("wm").value = wmText;
@@ -1358,4 +1531,4 @@ requestAnimationFrame(t => { last = t; tick(t); });
 loadFlag(FLAGS[0]);
 </script>
 </body>
-                                                              </html>
+</html>
