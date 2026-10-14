@@ -4,63 +4,76 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Aylanuvchi doiralar bilan chizish</title>
-<meta name="theme-color" content="#0a0a0c">
+<meta name="theme-color" content="#0a0b11">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
 :root{
-  --bg:#0a0a0c; --fg:#ededee; --mute:#8d8d94; --accent:#ff6652;
-  --panel:#15151a; --line:#2a2a31; --btn:#1d1d23;
+  --bg:#0a0b11; --card:#14161f; --card2:#1c1f2c; --fg:#eceef5; --mute:#8e93a6;
+  --accent:#ff7a59; --accent2:#ff4f8b; --line:#272b3a;
   box-sizing:border-box;
   padding-top:env(safe-area-inset-top,0px);
   padding-bottom:env(safe-area-inset-bottom,0px);
 }
 @media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){--bg:#0a0a0c;--fg:#ededee;--mute:#8d8d94;--panel:#15151a;--line:#2a2a31;--btn:#1d1d23}
+  :root:not([data-theme="light"]){--bg:#0a0b11;--card:#14161f;--card2:#1c1f2c;--fg:#eceef5;--mute:#8e93a6;--line:#272b3a}
 }
-:root[data-theme="dark"]{--bg:#0a0a0c;--fg:#ededee;--mute:#8d8d94;--panel:#15151a;--line:#2a2a31;--btn:#1d1d23}
+:root[data-theme="dark"]{--bg:#0a0b11;--card:#14161f;--card2:#1c1f2c;--fg:#eceef5;--mute:#8e93a6;--line:#272b3a}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *{box-sizing:border-box}
-html,body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-main{display:flex;flex-direction:column;align-items:center;gap:10px;padding:0 0 22px}
-.stage{
-  position:relative;
-  width:min(100vw, calc((100vh - 220px) * 0.5625), 560px);
-  min-width:260px;aspect-ratio:9/16;background:var(--bg);
-}
+[hidden]{display:none!important}
+html,body{margin:0;color:var(--fg);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  background:radial-gradient(900px 520px at 50% -8%,#1b1f3a 0%,rgba(27,31,58,0) 62%),var(--bg)}
+main{display:flex;flex-direction:column;align-items:center;gap:12px;padding:0 0 28px}
+.stage{position:relative;width:min(100vw, calc((100vh - 220px) * 0.5625), 560px);min-width:260px;aspect-ratio:9/16;background:#09090c}
 canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
-.ctl{width:min(100vw,560px);padding:0 14px;display:flex;flex-direction:column;gap:10px}
-.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-button,.btn{
-  appearance:none;border:1px solid var(--line);background:var(--btn);color:var(--fg);
-  border-radius:999px;padding:10px 15px;font:500 14px/1 system-ui,sans-serif;cursor:pointer;white-space:nowrap
-}
+.ctl{width:min(100vw,560px);padding:0 14px;display:flex;flex-direction:column;gap:12px}
+.card{background:linear-gradient(180deg,var(--card),#10121a);border:1px solid var(--line);border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:12px}
+.card h3{margin:0;font-size:15px;font-weight:650}
+button{appearance:none;font:600 14px/1.2 system-ui,sans-serif;color:var(--fg);cursor:pointer;border:1px solid var(--line);background:var(--card2);border-radius:14px;padding:12px 12px}
 button:disabled{opacity:.45;cursor:default}
 button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-button.on{border-color:var(--accent);color:var(--accent)}
-button.main{background:var(--accent);border-color:var(--accent);color:#1a0b08;font-weight:650}
-input[type=range]{flex:1;accent-color:var(--accent);min-width:90px}
+.pill{display:flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap}
+.pill .ic{font-size:17px}
+.big{display:flex;align-items:center;gap:14px;width:100%;padding:16px;border:0;border-radius:16px;text-align:left;color:#22090f;background:linear-gradient(135deg,#ff9a55,#ff4f8b)}
+.big .ic{font-size:32px}
+.big b{display:block;font-size:17px}
+.big small{display:block;font-size:12px;font-weight:500;opacity:.8;margin-top:2px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.timeline{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--mute)}
+input[type=range]{flex:1;min-width:0;accent-color:var(--accent)}
+.seg3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.seg3 button{display:flex;flex-direction:column;gap:3px;align-items:center;justify-content:center;padding:10px 6px;white-space:normal;text-align:center}
+.seg3 small{font-size:11px;color:var(--mute);font-weight:500}
+button.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
 .chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
-.chips button{flex:0 0 auto}
-.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
-.seg button{border:0;border-radius:0;background:transparent;padding:9px 13px}
-.seg button.on{background:var(--btn)}
-.lbl{font-size:12px;color:var(--mute)}
-.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px;display:none;flex-direction:column;gap:10px;font-size:13px;color:#c9c9ce}
-.panel.open{display:flex}
-.panel p{margin:0;line-height:1.45}
-textarea{width:100%;min-height:150px;background:#0e0e12;color:#e6e6e8;border:1px solid var(--line);border-radius:10px;padding:10px;font:12px/1.4 ui-monospace,Menlo,Consolas,monospace;resize:vertical}
-.status{min-height:1.3em;font-size:13px;color:var(--accent);line-height:1.35}
-.status.ok{color:#9ad6a8}
-.hide-file{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;pointer-events:none}
-#result{display:none;flex-direction:column;gap:8px}
-#result video{width:100%;max-height:60vh;border-radius:12px;background:#000}
-#result a{color:var(--accent);font-size:13px}
+.chips button{flex:0 0 auto;border-radius:999px;padding:10px 15px}
+.head{display:flex;justify-content:space-between;align-items:center;width:100%;background:transparent;border:0;padding:2px;font-size:15px;font-weight:650}
+.body{display:flex;flex-direction:column;gap:16px}
+.opt h4{margin:0 0 3px;font-size:14px}
+.opt p{margin:0 0 9px;font-size:12px;color:var(--mute);line-height:1.45}
 .hint{font-size:12px;color:var(--mute);line-height:1.45}
-input[type=text]{background:#0e0e12;color:var(--fg);border:1px solid var(--line);border-radius:10px;padding:9px 11px;font:14px system-ui,sans-serif;flex:1;min-width:120px}
-.sw{display:flex;gap:9px;flex-wrap:wrap}
-.sw button{width:28px;height:28px;padding:0;border-radius:50%;border:2px solid var(--line)}
-.sw button.on{border-color:#fff}
-#result img{width:100%;max-height:60vh;object-fit:contain;border-radius:12px;background:#0a0a0c}
+.status{min-height:1.2em;font-size:13px;color:var(--accent);line-height:1.35}
+.status.ok{color:#9ad6a8}
+.sw{display:flex;gap:12px;flex-wrap:wrap}
+.sw button{position:relative;width:38px;height:38px;padding:0;border-radius:50%;border:3px solid var(--line)}
+.sw button.on{border-color:#fff;box-shadow:none}
+.sw button.cust{background:conic-gradient(#f33,#fd3,#3e6,#3df,#36f,#d3f,#f33)}
+.sw button.cust i{position:absolute;inset:8px;border-radius:50%;background:var(--cc,#14161f);border:2px solid rgba(255,255,255,.85)}
+input[type=text]{width:100%;background:#0e1017;color:var(--fg);border:1px solid var(--line);border-radius:12px;padding:11px 12px;font:14px system-ui,sans-serif}
+textarea{width:100%;min-height:150px;background:#0e1017;color:#e6e6e8;border:1px solid var(--line);border-radius:12px;padding:10px;font:12px/1.4 ui-monospace,Menlo,Consolas,monospace;resize:vertical;margin-bottom:8px}
+.hide-file{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;pointer-events:none}
+.modal{position:fixed;inset:0;z-index:50;display:flex;align-items:flex-end;justify-content:center;background:rgba(4,5,9,.8)}
+.sheet{width:min(100vw,560px);max-height:94vh;overflow:auto;background:#151823;border:1px solid var(--line);border-radius:22px 22px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:12px}
+.sheet h3{margin:0;font-size:17px}
+.sheet video,.sheet img{width:100%;max-height:52vh;object-fit:contain;border-radius:14px;background:#09090c}
+.main{border:0;color:#22090f;background:linear-gradient(135deg,#ff9a55,#ff4f8b);font-size:15px;padding:14px}
+.prev{height:46px;border-radius:12px;background:#0b0c12;border:1px solid var(--line);display:flex;align-items:center;justify-content:center}
+.prev i{display:block;width:78%;height:6px;border-radius:3px;background:var(--cc,#fff)}
+input.cs{-webkit-appearance:none;appearance:none;width:100%;height:16px;border-radius:8px;outline:none;border:1px solid var(--line)}
+input.cs::-webkit-slider-thumb{-webkit-appearance:none;width:28px;height:28px;border-radius:50%;background:#fff;border:3px solid #0a0b11;box-shadow:0 0 0 2px #fff}
+input.cs::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:#fff;border:3px solid #0a0b11}
+.hex{font:600 14px ui-monospace,Menlo,monospace;color:var(--mute);text-align:center}
 </style>
 </head>
 <body>
@@ -68,58 +81,101 @@ input[type=text]{background:#0e0e12;color:var(--fg);border:1px solid var(--line)
   <div class="stage" id="stage"><canvas id="cv"></canvas></div>
 
   <div class="ctl">
-    <div class="row">
-      <button id="play" aria-label="Play / Pause">⏸</button>
-      <button id="restart" aria-label="Restart">↻</button>
-      <button id="speed">1×</button>
-      <button id="skip" aria-label="Skip to result">⏭</button>
-      <input type="range" id="scrub" min="0" max="1000" value="0" aria-label="Time">
-    </div>
-
-    <div class="row">
-      <button id="upload" class="main" data-i="upload"></button>
-      <button id="rec" data-i="rec"></button>
-      <button id="png" data-i="png"></button>
-    </div>
-    <input class="hide-file" type="file" id="file" accept="image/*">
-    <div class="status" id="status"></div>
-
-    <div class="row" id="traceRow" style="display:none">
-      <span class="lbl" data-i="mode"></span>
-      <div class="seg" id="seg">
-        <button data-m="auto" class="on" data-i="auto"></button>
-        <button data-m="color" data-i="color"></button>
-        <button data-m="edge" data-i="edge"></button>
+    <section class="card">
+      <div class="grid3">
+        <button id="play" class="pill"><span class="ic" id="playIc">⏸</span><span id="playLbl"></span></button>
+        <button id="restart" class="pill"><span class="ic">↻</span><span data-i="replay"></span></button>
+        <button id="skip" class="pill"><span class="ic">⏭</span><span data-i="result"></span></button>
       </div>
-      <span class="lbl" data-i="detail"></span>
-      <input type="range" id="detail" min="1000" max="5000" step="100" value="3200" aria-label="Detail">
-    </div>
-    <div class="hint" id="traceHint" data-i="hint" style="display:none"></div>
-
-    <div class="chips" id="chips"></div>
-
-    <div class="row">
-      <button id="setBtn" data-i="settings"></button>
-      <button id="customBtn" data-i="json_btn"></button>
-      <button id="shareApp" data-i="share"></button>
-    </div>
-
-    <div class="panel" id="setPanel">
-      <div class="row"><span class="lbl" data-i="lang"></span>
-        <div class="seg" id="langSeg"><button data-l="uz">O'zbek</button><button data-l="ru">Русский</button><button data-l="en">English</button></div>
+      <div class="timeline"><span id="tNow">0:00</span><input type="range" id="scrub" min="0" max="1000" value="0" aria-label="Time"><span id="tAll">0:30</span></div>
+      <div class="grid2">
+        <button id="speed" class="pill"></button>
+        <button id="musicBtn" class="pill"></button>
       </div>
-      <div class="row"><span class="lbl" data-i="linecolor"></span><div class="sw" id="sw"></div></div>
-      <div class="row"><span class="lbl" data-i="wm"></span><input type="text" id="wm" maxlength="32" placeholder="@bot" autocomplete="off"></div>
-    </div>
+    </section>
 
-    <div class="panel" id="panel">
-      <p data-i="json_help"></p>
-      <textarea id="json" spellcheck="false"></textarea>
-      <div class="row"><button id="apply" data-i="apply"></button></div>
-    </div>
-    <div id="result"></div>
+    <section class="card">
+      <button id="upload" class="big"><span class="ic">📷</span><span><b data-i="upload"></b><small data-i="upload_sub"></small></span></button>
+      <div class="grid2">
+        <button id="rec" class="pill"><span class="ic">🎬</span><span data-i="rec"></span></button>
+        <button id="png" class="pill"><span class="ic">🖼</span><span data-i="png"></span></button>
+      </div>
+      <div class="hint" data-i="save_note"></div>
+      <div class="status" id="status"></div>
+      <input class="hide-file" type="file" id="file" accept="image/*">
+      <input class="hide-file" type="file" id="audioFile" accept="audio/*">
+    </section>
+
+    <section class="card" id="traceCard" hidden>
+      <h3 data-i="how_title"></h3>
+      <div class="seg3" id="seg">
+        <button data-m="auto" class="on"><b data-i="auto"></b><small data-i="auto_d"></small></button>
+        <button data-m="color"><b data-i="color"></b><small data-i="color_d"></small></button>
+        <button data-m="edge"><b data-i="edge"></b><small data-i="edge_d"></small></button>
+      </div>
+      <div class="opt"><h4 data-i="detail"></h4><p data-i="detail_d"></p>
+        <input type="range" id="detail" min="1000" max="5000" step="100" value="3200" aria-label="Detail"></div>
+    </section>
+
+    <section class="card">
+      <h3 data-i="flags_title"></h3>
+      <div class="chips" id="chips"></div>
+    </section>
+
+    <section class="card">
+      <button class="head" id="setBtn"><span data-i="settings"></span><span id="setChev">▾</span></button>
+      <div class="body" id="setBody" hidden>
+        <div class="opt"><h4 data-i="linecolor"></h4><p data-i="linecolor_d"></p><div class="sw" id="sw"></div></div>
+        <div class="opt"><h4 data-i="music"></h4><p data-i="music_d"></p>
+          <div class="seg3" id="musicSeg">
+            <button data-mm="off" data-i="m_off"></button>
+            <button data-mm="gen" data-i="m_gen"></button>
+            <button data-mm="file" data-i="m_file"></button>
+          </div>
+          <div class="hint" id="musicName"></div></div>
+        <div class="opt"><h4 data-i="wm"></h4><p data-i="wm_d"></p>
+          <input type="text" id="wm" maxlength="32" placeholder="@bot" autocomplete="off"></div>
+        <div class="opt"><h4 data-i="lang"></h4>
+          <div class="seg3" id="langSeg"><button data-l="uz">O'zbek</button><button data-l="ru">Русский</button><button data-l="en">English</button></div></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <button class="head" id="moreBtn"><span data-i="more"></span><span id="moreChev">▾</span></button>
+      <div class="body" id="moreBody" hidden>
+        <div class="opt"><h4 data-i="share"></h4><p data-i="share_d"></p><button id="shareApp" class="pill" data-i="share_go"></button></div>
+        <div class="opt"><h4 data-i="json_t"></h4><p data-i="json_d"></p>
+          <textarea id="json" spellcheck="false"></textarea><button id="apply" class="pill" data-i="apply"></button></div>
+      </div>
+    </section>
   </div>
 </main>
+
+<div class="modal" id="colorModal" hidden>
+  <div class="sheet">
+    <h3 data-i="cm_title"></h3>
+    <div class="prev"><i id="cmPrev"></i></div>
+    <div class="opt"><h4 data-i="cm_hue"></h4><input class="cs" type="range" id="cmH" min="0" max="360" value="20"></div>
+    <div class="opt"><h4 data-i="cm_sat"></h4><input class="cs" type="range" id="cmS" min="0" max="100" value="80"></div>
+    <div class="opt"><h4 data-i="cm_val"></h4><input class="cs" type="range" id="cmV" min="25" max="100" value="100"></div>
+    <div class="hex" id="cmHex">#ff8844</div>
+    <button id="cmRainbow" class="pill" data-i="cm_rainbow"></button>
+    <button id="cmDone" class="main" data-i="cm_done"></button>
+  </div>
+</div>
+
+<div class="modal" id="resModal" hidden>
+  <div class="sheet">
+    <h3 id="resTitle"></h3>
+    <div id="resMedia"></div>
+    <button id="resSave" class="main" data-i="res_save"></button>
+    <button id="resShare" class="pill" data-i="res_share"></button>
+    <button id="resBrowser" class="pill" data-i="res_browser"></button>
+    <div class="status ok" id="resNote"></div>
+    <div class="hint" data-i="res_hint"></div>
+    <button id="resClose" class="pill" data-i="res_close"></button>
+  </div>
+</div>
 
 <script>
 "use strict";
@@ -137,37 +193,70 @@ const APP_LINK = "";   // masalan: "https://t.me/BOT_USERNAME/chizma" (bo'sh bo'
 let lang = "uz", lineMode = "#f5f5f5", wmText = "";
 
 const I18N = {
-  uz: { upload: "📷 Rasm yuklash", rec: "🎬 Video", png: "🖼 PNG", settings: "⚙ Sozlamalar", json_btn: "＋ Shakl (JSON)", share: "📤 Do'stlarga",
-    mode: "Rejim", detail: "Detal", auto: "Avto", color: "Ranglar", edge: "Chiziq", lang: "Til", linecolor: "Chiziq rangi", wm: "Belgi", apply: "Chizish",
-    hint: "Ranglar — bayroq, logo, multfilm uchun. Chiziq — foto, portret, har qanday rasm uchun (konturlarni topadi). Detal — mayda chiziqlar soni.",
-    json_help: "Shakllar: rect, circle, star, crescent, poly. Koordinatalar markazdan, y pastga qarab o'sadi.",
+  uz: { pause: "Pauza", play: "Davom", replay: "Qayta", result: "Natija", speed: "Tezlik", music_on: "Musiqa: yoniq", music_off: "Musiqa: o'chiq",
+    upload: "Rasm yuklash", upload_sub: "Telefondagi istalgan rasm chiziladi", rec: "Videoga olish", png: "Rasmga olish",
+    save_note: "Video musiqa bilan real vaqtda yoziladi (~35 soniya). Tugagach “Saqlash” oynasi chiqadi.",
+    how_title: "Rasm qanday chizilsin?", auto: "Avto", auto_d: "o'zi tanlaydi", color: "Ranglar", color_d: "bayroq, logo", edge: "Chiziq", edge_d: "foto, portret",
+    detail: "Detal", detail_d: "Ko'proq = batafsilroq, lekin sekinroq (faqat “Chiziq” rejimida).",
+    flags_title: "Tayyor bayroqlar",
+    settings: "⚙ Sozlamalar", linecolor: "🎨 Chiziq rangi", linecolor_d: "Rasm qaysi rangda chizilishini tanlang. Oxirgi doira — o'z rangingizni yasaysiz.",
+    music: "🎵 Musiqa", music_d: "Animatsiya va video musiqa bilan chiqadi. “Original” — dasturning o'z musiqasi. Yoki o'zingizning qo'shig'ingizni yuklang.",
+    m_off: "O'chiq", m_gen: "Original", m_file: "Mening qo'shig'im",
+    wm: "🏷 Belgi (watermark)", wm_d: "Video va rasmning pastiga yoziladi. Masalan: @botingiz", lang: "🌐 Til",
+    more: "🛠 Qo'shimcha", share: "📤 Botni do'stlarga yuborish", share_d: "Telegramda do'stlaringizga ilova havolasini yuboradi.", share_go: "Yuborish",
+    json_t: "Shakl yasash (ilg'or)", json_d: "Dasturchilar uchun: o'z bayrog'ingizni shakllar (rect, circle, star, crescent, poly) bilan yozing. Koordinatalar markazdan, y pastga o'sadi.", apply: "Chizish",
+    cm_title: "O'z rangingizni yarating", cm_hue: "Ton (rang turi)", cm_sat: "To'yinganlik", cm_val: "Yorqinlik", cm_rainbow: "🌈 Kamalak: chiziq bo'ylab rang almashadi", cm_done: "Tayyor",
+    res_video: "Video tayyor!", res_png: "Rasm tayyor!", res_save: "💾 Telefonga saqlash", res_share: "📤 Ulashish (Telegram, galereya…)", res_browser: "🌐 Brauzerda ochish", res_close: "Yopish",
+    res_hint: "“Telefonga saqlash” faylni Yuklamalar (Galereya) papkasiga tushiradi. Telegram ichida ishlamasa — “Brauzerda ochish” ni bosing va u yerda videoni qayta oling.",
+    res_started: "Yuklab olish boshlandi — Yuklamalar yoki Galereyani tekshiring.",
+    music_loading: "Qo'shiq yuklanmoqda…", music_ok: "Qo'shiq: {n}", music_bad: "Audio faylni o'qib bo'lmadi", music_none: "Qo'shiq tanlanmagan — “Mening qo'shig'im” ni bosing",
     reading: "Rasm o'qilmoqda…", tracing: "Kontur qidirilmoqda…", done_edge: "Tayyor: chiziq rejimi", done_color: "Tayyor: ranglar rejimi",
     err: "Xato", not_image: "Bu rasm emas", bad_file: "fayl o'qilmadi", bad_format: "rasm formati qo'llanmaydi",
     rec_unsup: "Bu qurilmada video yozish ishlamaydi", rec_nofmt: "Bu qurilmada video formati topilmadi", rec_prog: "Yozilmoqda… {p}% (sahifani yopmang)",
-    saved: "Saqlandi: {n}", ready: "Tayyor — pastda", save_hint: "Saqlash: bosib turing yoki “Ulashish” tugmasini bosing.",
-    declined: "Saqlash bekor qilindi — pastdan oching", failed: "Saqlab bo'lmadi — pastdan oching", share_btn: "📤 Ulashish / saqlash",
     share_text: "Rasmni aylanuvchi doiralar bilan chizdiring ✨",
     E_NOCOLOR: "Rangli joylar topilmadi", E_NOCONTOUR: "Kontur topilmadi", E_FLAT: "Chiziqlar topilmadi — rasm juda tekis", E_NOLINES: "Chiziqlar topilmadi", E_JSON: "w, h va shapes kerak" },
-  ru: { upload: "📷 Загрузить фото", rec: "🎬 Видео", png: "🖼 PNG", settings: "⚙ Настройки", json_btn: "＋ Фигуры (JSON)", share: "📤 Друзьям",
-    mode: "Режим", detail: "Детали", auto: "Авто", color: "Цвета", edge: "Линия", lang: "Язык", linecolor: "Цвет линии", wm: "Подпись", apply: "Рисовать",
-    hint: "Цвета — для флагов, логотипов, мультфильмов. Линия — для фото, портретов, любых картинок (находит контуры). Детали — число мелких линий.",
-    json_help: "Фигуры: rect, circle, star, crescent, poly. Координаты от центра, y растёт вниз.",
+  ru: { pause: "Пауза", play: "Играть", replay: "Заново", result: "Итог", speed: "Скорость", music_on: "Музыка: вкл", music_off: "Музыка: выкл",
+    upload: "Загрузить картинку", upload_sub: "Любая картинка с телефона будет нарисована", rec: "Записать видео", png: "Сохранить фото",
+    save_note: "Видео пишется в реальном времени с музыкой (~35 сек). Потом откроется окно «Сохранить».",
+    how_title: "Как рисовать картинку?", auto: "Авто", auto_d: "выберет само", color: "Цвета", color_d: "флаги, логотипы", edge: "Линия", edge_d: "фото, портреты",
+    detail: "Детали", detail_d: "Больше = подробнее, но медленнее (только режим «Линия»).",
+    flags_title: "Готовые флаги",
+    settings: "⚙ Настройки", linecolor: "🎨 Цвет линии", linecolor_d: "Каким цветом рисовать. Последний круг — создайте свой цвет.",
+    music: "🎵 Музыка", music_d: "Анимация и видео идут с музыкой. «Оригинал» — встроенная музыка. Или загрузите свою песню.",
+    m_off: "Выкл", m_gen: "Оригинал", m_file: "Моя песня",
+    wm: "🏷 Подпись (watermark)", wm_d: "Пишется внизу видео и фото. Например: @вашбот", lang: "🌐 Язык",
+    more: "🛠 Дополнительно", share: "📤 Отправить бота друзьям", share_d: "Отправит друзьям в Telegram ссылку на приложение.", share_go: "Отправить",
+    json_t: "Свои фигуры (для опытных)", json_d: "Опишите флаг фигурами (rect, circle, star, crescent, poly). Координаты от центра, y растёт вниз.", apply: "Рисовать",
+    cm_title: "Создайте свой цвет", cm_hue: "Тон (оттенок)", cm_sat: "Насыщенность", cm_val: "Яркость", cm_rainbow: "🌈 Радуга: цвет меняется вдоль линии", cm_done: "Готово",
+    res_video: "Видео готово!", res_png: "Фото готово!", res_save: "💾 Сохранить на телефон", res_share: "📤 Поделиться (Telegram, галерея…)", res_browser: "🌐 Открыть в браузере", res_close: "Закрыть",
+    res_hint: "«Сохранить на телефон» кладёт файл в Загрузки (Галерею). Если в Telegram не работает — нажмите «Открыть в браузере» и запишите видео там.",
+    res_started: "Загрузка началась — проверьте Загрузки или Галерею.",
+    music_loading: "Загружаю песню…", music_ok: "Песня: {n}", music_bad: "Не удалось прочитать аудио", music_none: "Песня не выбрана — нажмите «Моя песня»",
     reading: "Читаю картинку…", tracing: "Ищу контуры…", done_edge: "Готово: режим линии", done_color: "Готово: режим цветов",
     err: "Ошибка", not_image: "Это не картинка", bad_file: "файл не прочитан", bad_format: "формат не поддерживается",
     rec_unsup: "Запись видео не поддерживается", rec_nofmt: "Формат видео не найден", rec_prog: "Запись… {p}% (не закрывайте страницу)",
-    saved: "Сохранено: {n}", ready: "Готово — ниже", save_hint: "Сохранить: зажмите видео или нажмите «Поделиться».",
-    declined: "Сохранение отменено — откройте ниже", failed: "Не удалось сохранить — откройте ниже", share_btn: "📤 Поделиться / сохранить",
     share_text: "Нарисуй любую картинку вращающимися кругами ✨",
     E_NOCOLOR: "Цветные области не найдены", E_NOCONTOUR: "Контур не найден", E_FLAT: "Линии не найдены — картинка слишком ровная", E_NOLINES: "Линии не найдены", E_JSON: "нужны w, h и shapes" },
-  en: { upload: "📷 Upload picture", rec: "🎬 Video", png: "🖼 PNG", settings: "⚙ Settings", json_btn: "＋ Shapes (JSON)", share: "📤 Share app",
-    mode: "Mode", detail: "Detail", auto: "Auto", color: "Colors", edge: "Line", lang: "Language", linecolor: "Line color", wm: "Watermark", apply: "Draw",
-    hint: "Colors: flags, logos, cartoons. Line: photos, portraits, anything (finds edges). Detail: how many small lines.",
-    json_help: "Shapes: rect, circle, star, crescent, poly. Coordinates from center, y grows downward.",
+  en: { pause: "Pause", play: "Play", replay: "Replay", result: "Result", speed: "Speed", music_on: "Music: on", music_off: "Music: off",
+    upload: "Upload a picture", upload_sub: "Any picture from your phone gets drawn", rec: "Record video", png: "Save picture",
+    save_note: "The video is recorded live with music (~35 s). A “Save” window opens when it ends.",
+    how_title: "How should it be drawn?", auto: "Auto", auto_d: "picks for you", color: "Colors", color_d: "flags, logos", edge: "Line", edge_d: "photos, portraits",
+    detail: "Detail", detail_d: "More = more detailed but slower (“Line” mode only).",
+    flags_title: "Ready-made flags",
+    settings: "⚙ Settings", linecolor: "🎨 Line color", linecolor_d: "Pick the drawing color. The last circle lets you create your own.",
+    music: "🎵 Music", music_d: "The animation and video come with music. “Original” is the built-in tune. Or upload your own song.",
+    m_off: "Off", m_gen: "Original", m_file: "My song",
+    wm: "🏷 Watermark", wm_d: "Printed at the bottom of the video and picture. E.g. @yourbot", lang: "🌐 Language",
+    more: "🛠 More", share: "📤 Send the bot to friends", share_d: "Sends the app link to your friends in Telegram.", share_go: "Send",
+    json_t: "Custom shapes (advanced)", json_d: "Describe a flag with shapes (rect, circle, star, crescent, poly). Coordinates from center, y grows downward.", apply: "Draw",
+    cm_title: "Create your own color", cm_hue: "Hue", cm_sat: "Saturation", cm_val: "Brightness", cm_rainbow: "🌈 Rainbow: color changes along the line", cm_done: "Done",
+    res_video: "Video ready!", res_png: "Picture ready!", res_save: "💾 Save to phone", res_share: "📤 Share (Telegram, gallery…)", res_browser: "🌐 Open in browser", res_close: "Close",
+    res_hint: "“Save to phone” puts the file in Downloads (Gallery). If that does not work inside Telegram, tap “Open in browser” and record there.",
+    res_started: "Download started — check Downloads or Gallery.",
+    music_loading: "Loading song…", music_ok: "Song: {n}", music_bad: "Could not read the audio file", music_none: "No song selected — tap “My song”",
     reading: "Reading picture…", tracing: "Finding outlines…", done_edge: "Done: line mode", done_color: "Done: color mode",
     err: "Error", not_image: "Not a picture", bad_file: "file could not be read", bad_format: "unsupported image format",
     rec_unsup: "Video recording is not supported here", rec_nofmt: "No video format found", rec_prog: "Recording… {p}% (keep this page open)",
-    saved: "Saved: {n}", ready: "Ready — below", save_hint: "To save: press and hold the video, or tap “Share”.",
-    declined: "Save cancelled — open it below", failed: "Could not save — open it below", share_btn: "📤 Share / save",
     share_text: "Draw any picture with spinning circles ✨",
     E_NOCOLOR: "No color regions found", E_NOCONTOUR: "No outline found", E_FLAT: "No lines found — image too flat", E_NOLINES: "No lines found", E_JSON: "w, h and shapes are required" }
 };
@@ -682,10 +771,23 @@ function drawTrace(sd, f, fcx, fcy, s, alpha, jumpA = 1) {
 
 /* ---------- main frame ---------- */
 let T = 0, playing = true, speedMul = 1, last = performance.now(), scrubbing = false;
+function drawBackdrop() {
+  const g = ctx.createLinearGradient(0, 0, 0, 1280);
+  g.addColorStop(0, "#0c0e18"); g.addColorStop(1, "#09090c");
+  ctx.fillStyle = g; ctx.fillRect(0, 0, 720, 1280);
+  const r = ctx.createRadialGradient(440, 690, 20, 440, 690, 560);
+  r.addColorStop(0, "rgba(255,110,90,0.11)"); r.addColorStop(1, "rgba(255,110,90,0)");
+  ctx.fillStyle = r; ctx.fillRect(0, 0, 720, 1280);
+  for (let i = 0; i < 44; i++) {
+    const x = (i * 97.3) % 720, y = (i * 211.7) % 1280;
+    ctx.fillStyle = `rgba(255,255,255,${0.12 + 0.26 * Math.abs(Math.sin(T / 1100 + i * 1.7))})`;
+    ctx.fillRect(x, y, 2, 2);
+  }
+}
 function frame() {
   if (!F) return;
   ctx.setTransform(kScale, 0, 0, kScale, 0, 0);
-  ctx.fillStyle = "#0a0a0c"; ctx.fillRect(0, 0, 720, 1280);
+  drawBackdrop();
 
   const sDraw = Math.min(380 / F.w, 300 / F.h), sFin = Math.min(580 / F.w, 460 / F.h);
   let stageIdx = -1, prog = 0, u = 0, mode = "intro";
@@ -729,8 +831,9 @@ function frame() {
       ctx.moveTo(pen[0], ex[1]); ctx.lineTo(pen[0], pen[1]);
       ctx.moveTo(ey[0], pen[1]); ctx.lineTo(pen[0], pen[1]);
       ctx.stroke(); ctx.restore();
+      ctx.save(); ctx.shadowColor = "rgba(255,255,255,0.9)"; ctx.shadowBlur = 16;
       ctx.beginPath(); ctx.arc(pen[0], pen[1], 6.5, 0, TAU);
-      ctx.fillStyle = `rgba(255,255,255,${chainA})`; ctx.fill();
+      ctx.fillStyle = `rgba(255,255,255,${chainA})`; ctx.fill(); ctx.restore();
     } else if (F.raw) drawTrace(sd, M - 1, fcx, fcy, s, 1, 0);
     const a1 = mode === "stage" ? 1 : 1 - Math.min(1, u * 2.2);
     runs([{ t: "N", f: `italic 52px ${SANS}`, c: "#ff6652" }, { t: " = " + N, f: `52px ${SANS}`, c: "#ff6652" }], 1064, a1);
@@ -750,12 +853,13 @@ function frame() {
   }
   if (wmText) text(wmText, 360, 1258, `16px ${SANS}`, "#ffffff", 0.38);
   $("scrub").value = Math.round(T / TOTAL * 1000);
+  updateClock();
 }
 function tick(now) {
   const dt = Math.min(60, now - last); last = now;
   if (playing && !scrubbing) {
     T += dt * speedMul;
-    if (T >= TOTAL) { T = TOTAL; playing = false; $("play").textContent = "▶"; }
+    if (T >= TOTAL) { T = TOTAL; playing = false; setPlayUI(false); }
   }
   frame();
   requestAnimationFrame(tick);
@@ -764,13 +868,148 @@ function tick(now) {
 /* ---------- loading / UI ---------- */
 const $ = id => document.getElementById(id);
 function setStatus(msg, ok) { const s = $("status"); s.textContent = msg || ""; s.className = "status" + (ok ? " ok" : ""); }
+const fmtClock = ms => { const s = Math.max(0, Math.round(ms / 1000)); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); };
+let lastClock = "";
+function updateClock() {
+  const a = fmtClock(T), b = fmtClock(TOTAL), k = a + "/" + b;
+  if (k !== lastClock) { lastClock = k; $("tNow").textContent = a; $("tAll").textContent = b; }
+}
+function setPlayUI(p) { $("playIc").textContent = p ? "⏸" : "▶"; $("playLbl").textContent = tr(p ? "pause" : "play"); }
+function updateSpeedUI() { $("speed").textContent = "⚡ " + tr("speed") + ": " + speedMul + "×"; }
+function updateMusicUI() {
+  $("musicBtn").textContent = "🎵 " + tr(music.mode !== "off" ? "music_on" : "music_off");
+  document.querySelectorAll("#musicSeg button").forEach(b => b.classList.toggle("on", b.dataset.mm === music.mode));
+}
+
+/* ---------- music: original generated tune, or the user's own file ---------- */
+const music = {
+  mode: "gen", ctx: null, bus: null, src: null, fileBuf: null, fileName: "", pending: false, _ev: null,
+  ensure() {
+    if (!this.ctx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return false;
+      const c = this.ctx = new AC();
+      this.master = c.createGain(); this.master.gain.value = 0.9;
+      const dl = c.createDelay(1); dl.delayTime.value = 0.28;
+      const fb = c.createGain(); fb.gain.value = 0.32;
+      const wet = c.createGain(); wet.gain.value = 0.35;
+      this.out = c.createGain();
+      this.master.connect(this.out);
+      this.master.connect(dl); dl.connect(fb); fb.connect(dl); dl.connect(wet); wet.connect(this.out);
+      this.out.connect(c.destination);
+      this.recDest = c.createMediaStreamDestination();
+      this.out.connect(this.recDest);
+    }
+    return true;
+  },
+  stop() {
+    if (this.bus) {
+      try { this.bus.gain.cancelScheduledValues(0); this.bus.gain.setValueAtTime(0, this.ctx.currentTime); } catch (e) { /* ignore */ }
+      try { this.bus.disconnect(); } catch (e) { /* ignore */ }
+      this.bus = null;
+    }
+    if (this.src) { try { this.src.stop(); } catch (e) { /* ignore */ } this.src = null; }
+    this.pending = false;
+  },
+  fade(sec) {
+    if (!this.bus) return;
+    try { const t = this.ctx.currentTime; this.bus.gain.setValueAtTime(1, t); this.bus.gain.linearRampToValueAtTime(0, t + sec); } catch (e) { /* ignore */ }
+  },
+  start(fromMs, speed) {
+    this.stop();
+    if (this.mode === "off" || !this.ensure()) return;
+    const c = this.ctx;
+    if (c.state !== "running") {
+      this.pending = true;
+      c.resume().then(() => { if (this.pending) { this.pending = false; syncMusic(); } }).catch(() => {});
+      return;
+    }
+    const now = c.currentTime + 0.06;
+    this.bus = c.createGain(); this.bus.connect(this.master);
+    if (this.mode === "file") {
+      if (!this.fileBuf) return;
+      const s = c.createBufferSource(); s.buffer = this.fileBuf; s.playbackRate.value = speed;
+      s.connect(this.bus); s.start(now, (fromMs / 1000) % this.fileBuf.duration); this.src = s;
+      return;
+    }
+    for (const ev of this.events()) {
+      const end = ev.t + ev.d * 1000;
+      if (end < fromMs) continue;
+      const startMs = Math.max(ev.t, fromMs);
+      this.voice(ev, now + (startMs - fromMs) / 1000 / speed, (end - startMs) / 1000);
+    }
+  },
+  events() {
+    if (this._ev) return this._ev;
+    const ev = [], S = STAGES.length;
+    const f = st => 220 * Math.pow(2, st / 12);
+    const scale = [0, 3, 5, 7, 10, 12, 15, 17, 19, 22, 24];
+    const roots = [0, -4, -2, -5, 0, 3, -2, 0];
+    ev.push({ k: "pad", t: 0, d: INTRO / 1000 + 0.4, f: [f(-12), f(0), f(7)], v: 0.05 });
+    for (let i = 0; i < S; i++) {
+      const t0 = INTRO + i * STAGE_T, r = roots[i % roots.length];
+      ev.push({ k: "pad", t: t0, d: STAGE_T / 1000 + 0.5, f: [f(r - 12), f(r), f(r + 7), f(r + 12)], v: 0.05 + i * 0.004 });
+      ev.push({ k: "bass", t: t0, d: 0.9, f: [f(r - 24)], v: 0.2 });
+      ev.push({ k: "pluck", t: t0, d: 1.1, f: [f(r + 24)], v: 0.07 });
+      const steps = 6 + i * 2;
+      for (let s = 0; s < steps; s++) {
+        ev.push({ k: "pluck", t: t0 + 250 + (s / steps) * (DRAW_T - 250), d: 0.55, f: [f(r + scale[(s * 2 + i * 3) % scale.length] + 12)], v: 0.085 });
+      }
+    }
+    const tf = INTRO + S * STAGE_T;
+    ev.push({ k: "pad", t: tf, d: 4.5, f: [f(-12), f(0), f(4), f(7), f(12), f(16)], v: 0.07 });
+    ev.push({ k: "bass", t: tf, d: 2, f: [f(-24)], v: 0.22 });
+    [0, 4, 7, 12, 16, 19, 24, 28].forEach((n, k) => ev.push({ k: "pluck", t: tf + 80 + k * 130, d: 1.2, f: [f(n + 12)], v: 0.08 }));
+    return (this._ev = ev);
+  },
+  voice(ev, when, dur) {
+    const c = this.ctx;
+    const env = c.createGain(); env.connect(this.bus);
+    const g = env.gain;
+    g.setValueAtTime(0.0001, when);
+    if (ev.k === "pad") {
+      g.linearRampToValueAtTime(ev.v, when + Math.min(0.8, dur * 0.4));
+      g.setValueAtTime(ev.v, when + Math.max(0.01, dur - 0.7));
+      g.linearRampToValueAtTime(0.0001, when + dur);
+    } else {
+      g.linearRampToValueAtTime(ev.v, when + 0.012);
+      g.exponentialRampToValueAtTime(0.0001, when + Math.max(0.1, Math.min(dur, ev.d)));
+    }
+    ev.f.forEach((fr, i) => {
+      const o = c.createOscillator();
+      o.type = ev.k === "pad" ? (i % 2 ? "triangle" : "sine") : ev.k === "bass" ? "sine" : "triangle";
+      o.frequency.value = fr;
+      if (ev.k === "pad") o.detune.value = (i - 1.5) * 4;
+      o.connect(env); o.start(when); o.stop(when + dur + 0.1);
+    });
+  }
+};
+function syncMusic() {
+  if (recording) return;
+  if (playing && T < TOTAL) music.start(T, speedMul); else if (!playing) music.stop();
+}
+async function loadSong(file) {
+  if (!file) return;
+  setStatus(tr("music_loading"), true);
+  try {
+    if (!music.ensure()) throw new Error("no audio");
+    const buf = await music.ctx.decodeAudioData(await file.arrayBuffer());
+    music.fileBuf = buf; music.fileName = file.name || "song"; music.mode = "file";
+    store("mm", "file");
+    $("musicName").textContent = tr("music_ok", { n: music.fileName });
+    setStatus("");
+    updateMusicUI(); syncMusic();
+  } catch (e) { setStatus(tr("music_bad")); }
+}
+
+/* ---------- flags, load, chips ---------- */
 function loadFlag(f) {
   F = buildFlag(f);
   STAGES = f.free ? STAGES_FREE : STAGES_FLAG;
   TOTAL = INTRO + STAGES.length * STAGE_T + TRANS;
-  T = 0; playing = true; $("play").textContent = "⏸";
+  music._ev = null;
+  T = 0; playing = true; setPlayUI(true); syncMusic();
   document.querySelectorAll(".chips button").forEach(b => b.classList.toggle("on", !f.free && b.dataset.name === f.name));
-  // warm the stage cache without blocking the first frames
   let i = 0;
   const warm = () => { if (F !== f || i >= STAGES.length) return; stageData(STAGES[i++]); setTimeout(warm, 30); };
   setTimeout(warm, 50);
@@ -784,7 +1023,7 @@ const chips = $("chips");
 FLAGS.forEach(f => {
   const b = document.createElement("button");
   b.textContent = f.name; b.dataset.name = f.name;
-  b.onclick = () => { setStatus(""); $("traceRow").style.display = $("traceHint").style.display = "none"; loadFlag(f); $("json").value = specText(f); };
+  b.onclick = () => { setStatus(""); $("traceCard").hidden = true; loadFlag(f); $("json").value = specText(f); };
   chips.appendChild(b);
 });
 $("json").value = specText(FLAGS[0]);
@@ -795,8 +1034,26 @@ function store(k, v) {
   return null;
 }
 const tg = (window.Telegram && Telegram.WebApp) || null;
-const LINE_COLORS = ["#f5f5f5", "#ffd166", "#7dd3fc", "#ff7eb6", "#86efac", "rainbow"];
+const inTg = !!(tg && tg.initData);
+const PRESET_COLORS = ["#f5f5f5", "#ffd166", "#7dd3fc", "#ff7eb6", "#86efac"];
+let customColor = "", hsv = { h: 20, s: 80, v: 100 };
 
+function hsv2hex(h, s, v) {
+  s /= 100; v /= 100;
+  const c = v * s, x = c * (1 - Math.abs((h / 60) % 2 - 1)), m = v - c;
+  let r = 0, g = 0, b = 0;
+  if (h < 60) { r = c; g = x; } else if (h < 120) { r = x; g = c; } else if (h < 180) { g = c; b = x; }
+  else if (h < 240) { g = x; b = c; } else if (h < 300) { r = x; b = c; } else { r = c; b = x; }
+  const to = n => Math.round((n + m) * 255).toString(16).padStart(2, "0");
+  return "#" + to(r) + to(g) + to(b);
+}
+function hex2hsv(hex) {
+  const n = parseInt(hex.slice(1), 16), r = (n >> 16 & 255) / 255, g = (n >> 8 & 255) / 255, b = (n & 255) / 255;
+  const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
+  let h = 0;
+  if (d) h = mx === r ? ((g - b) / d + 6) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  return { h: Math.round(h * 60), s: Math.round(mx ? d / mx * 100 : 0), v: Math.round(mx * 100) };
+}
 function detectLang() {
   const saved = store("lang");
   if (saved && I18N[saved]) return saved;
@@ -809,39 +1066,98 @@ function applyLang() {
   document.documentElement.lang = lang;
   document.querySelectorAll("[data-i]").forEach(el => { el.textContent = tr(el.dataset.i); });
   document.querySelectorAll("#langSeg button").forEach(b => b.classList.toggle("on", b.dataset.l === lang));
-}
-function paintSwatches() {
-  document.querySelectorAll("#sw button").forEach(b => b.classList.toggle("on", b.dataset.c === lineMode));
+  setPlayUI(playing); updateSpeedUI(); updateMusicUI();
+  if (music.fileName) $("musicName").textContent = tr("music_ok", { n: music.fileName });
 }
 const swBox = $("sw");
-LINE_COLORS.forEach(c => {
-  const b = document.createElement("button");
-  b.dataset.c = c; b.setAttribute("aria-label", c);
-  b.style.background = c === "rainbow" ? "conic-gradient(#f33,#fd3,#3e6,#3df,#36f,#d3f,#f33)" : c;
-  b.onclick = () => { lineMode = c; store("lc", c); paintSwatches(); };
-  swBox.appendChild(b);
-});
+function buildSwatches() {
+  swBox.innerHTML = "";
+  PRESET_COLORS.forEach(c => {
+    const b = document.createElement("button");
+    b.dataset.c = c; b.setAttribute("aria-label", c); b.style.background = c;
+    b.onclick = () => { lineMode = c; store("lc", c); paintSwatches(); };
+    swBox.appendChild(b);
+  });
+  const cb = document.createElement("button");
+  cb.className = "cust"; cb.dataset.c = "custom"; cb.setAttribute("aria-label", "custom color");
+  cb.innerHTML = "<i></i>";
+  cb.onclick = openColorModal;
+  swBox.appendChild(cb);
+}
+function paintSwatches() {
+  const isPreset = PRESET_COLORS.indexOf(lineMode) >= 0;
+  document.querySelectorAll("#sw button").forEach(b => {
+    if (b.dataset.c === "custom") { b.classList.toggle("on", !isPreset); if (customColor) b.style.setProperty("--cc", customColor); }
+    else b.classList.toggle("on", b.dataset.c === lineMode);
+  });
+}
+function paintColorModal() {
+  const hex = hsv2hex(hsv.h, hsv.s, hsv.v);
+  $("cmPrev").style.setProperty("--cc", lineMode === "rainbow" ? "transparent" : hex);
+  $("cmPrev").style.background = lineMode === "rainbow" ? "linear-gradient(90deg,#f33,#fd3,#3e6,#3df,#36f,#d3f)" : hex;
+  $("cmHex").textContent = lineMode === "rainbow" ? "🌈" : hex;
+  $("cmS").style.background = "linear-gradient(90deg," + hsv2hex(hsv.h, 0, hsv.v) + "," + hsv2hex(hsv.h, 100, hsv.v) + ")";
+  $("cmV").style.background = "linear-gradient(90deg,#000," + hsv2hex(hsv.h, hsv.s, 100) + ")";
+  $("cmH").style.background = "linear-gradient(90deg,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00)";
+  $("cmRainbow").classList.toggle("on", lineMode === "rainbow");
+}
+function openColorModal() {
+  if (/^#[0-9a-f]{6}$/i.test(lineMode) && PRESET_COLORS.indexOf(lineMode) < 0) hsv = hex2hsv(lineMode);
+  else if (customColor) hsv = hex2hsv(customColor);
+  $("cmH").value = hsv.h; $("cmS").value = hsv.s; $("cmV").value = hsv.v;
+  paintColorModal();
+  $("colorModal").hidden = false;
+}
+function onColorInput() {
+  hsv = { h: +$("cmH").value, s: +$("cmS").value, v: +$("cmV").value };
+  customColor = hsv2hex(hsv.h, hsv.s, hsv.v);
+  lineMode = customColor; store("lc", lineMode); store("cc", customColor);
+  paintColorModal(); paintSwatches();
+}
+["cmH", "cmS", "cmV"].forEach(id => $(id).addEventListener("input", onColorInput));
+$("cmRainbow").onclick = () => {
+  lineMode = lineMode === "rainbow" ? (customColor || PRESET_COLORS[0]) : "rainbow";
+  store("lc", lineMode); paintColorModal(); paintSwatches();
+};
+$("cmDone").onclick = () => { $("colorModal").hidden = true; };
+$("colorModal").addEventListener("click", ev => { if (ev.target === $("colorModal")) $("colorModal").hidden = true; });
 
 /* ---------- playback controls ---------- */
-$("play").onclick = () => { if (recording) return; if (T >= TOTAL) T = 0; playing = !playing; $("play").textContent = playing ? "⏸" : "▶"; };
-$("restart").onclick = () => { if (recording) return; T = 0; playing = true; $("play").textContent = "⏸"; };
-$("skip").onclick = () => { if (recording) return; T = TOTAL; playing = false; $("play").textContent = "▶"; };
+$("play").onclick = () => { if (recording) return; if (T >= TOTAL) T = 0; playing = !playing; setPlayUI(playing); syncMusic(); };
+$("restart").onclick = () => { if (recording) return; T = 0; playing = true; setPlayUI(true); syncMusic(); };
+$("skip").onclick = () => { if (recording) return; T = TOTAL; playing = false; setPlayUI(false); syncMusic(); };
 $("speed").onclick = () => {
   if (recording) return;
   speedMul = speedMul === 1 ? 2 : speedMul === 2 ? 0.5 : 1;
-  $("speed").textContent = speedMul + "×";
+  updateSpeedUI(); syncMusic();
 };
+$("musicBtn").onclick = () => {
+  if (music.mode === "off") { music.mode = store("mm") === "file" && music.fileBuf ? "file" : "gen"; }
+  else music.mode = "off";
+  store("mm", music.mode === "off" ? (store("mm") || "gen") : music.mode);
+  updateMusicUI(); syncMusic();
+};
+$("musicSeg").addEventListener("click", ev => {
+  const b = ev.target.closest("button"); if (!b) return;
+  const m = b.dataset.mm;
+  if (m === "file") { if (music.fileBuf && music.mode !== "file") { music.mode = "file"; updateMusicUI(); syncMusic(); } else { $("audioFile").value = ""; $("audioFile").click(); } return; }
+  music.mode = m; store("mm", m); updateMusicUI(); syncMusic();
+});
+$("audioFile").addEventListener("change", ev => loadSong(ev.target.files && ev.target.files[0]));
 const sc = $("scrub");
-sc.addEventListener("input", () => { if (recording) return; scrubbing = true; T = sc.value / 1000 * TOTAL; });
-["change", "pointerup", "touchend"].forEach(ev => sc.addEventListener(ev, () => { scrubbing = false; }));
-$("customBtn").onclick = () => $("panel").classList.toggle("open");
-$("setBtn").onclick = () => $("setPanel").classList.toggle("open");
+sc.addEventListener("input", () => { if (recording) return; if (!scrubbing) music.stop(); scrubbing = true; T = sc.value / 1000 * TOTAL; });
+["change", "pointerup", "touchend"].forEach(ev => sc.addEventListener(ev, () => { if (scrubbing) { scrubbing = false; syncMusic(); } }));
+function toggleBody(btn, body, chev) {
+  const open = $(body).hidden; $(body).hidden = !open; $(chev).textContent = open ? "▴" : "▾";
+}
+$("setBtn").onclick = () => toggleBody("setBtn", "setBody", "setChev");
+$("moreBtn").onclick = () => toggleBody("moreBtn", "moreBody", "moreChev");
 $("apply").onclick = () => {
   try {
     const spec = JSON.parse($("json").value);
     if (!(spec.w > 0 && spec.h > 0) || !Array.isArray(spec.shapes)) throw new Error("E_JSON");
     spec.bg = spec.bg || "#ffffff"; spec.desc = spec.desc || "one line of spinning circles";
-    $("traceRow").style.display = $("traceHint").style.display = "none";
+    $("traceCard").hidden = true;
     loadFlag(spec); setStatus("");
   } catch (err) { setStatus(errText(err)); }
 };
@@ -872,8 +1188,7 @@ function processImage() {
       if (curMode === "color") f = traceColors(curImg, curName, true);
       else if (curMode === "auto") f = traceColors(curImg, curName, false);
       if (!f) f = traceEdges(curImg, curName, detail);
-      $("traceRow").style.display = "flex";
-      $("traceHint").style.display = "block";
+      $("traceCard").hidden = false;
       loadFlag(f);
       setStatus(tr(f.raw ? "done_edge" : "done_color"), true);
     } catch (err) { setStatus(errText(err)); }
@@ -915,32 +1230,40 @@ $("seg").addEventListener("click", ev => {
 let detailTimer = 0;
 $("detail").addEventListener("input", () => { clearTimeout(detailTimer); detailTimer = setTimeout(() => { if (curMode !== "color") processImage(); }, 350); });
 
-/* ---------- output: video / PNG ---------- */
+/* ---------- output: video / PNG with a clear "Save" window ---------- */
 const safeName = () => (F.name || "drawing").replace(/[^\w\-]+/g, "_");
-async function deliver(blob, fname, kind) {
-  let saved = false;
-  try {
-    const dl = window.claude && claude.use ? await claude.use("downloads") : null;
-    if (dl) { await dl.save({ filename: fname, data: blob }); saved = true; setStatus(tr("saved", { n: fname }), true); }
-  } catch (err) { setStatus(tr(err && err.code === "declined" ? "declined" : "failed")); }
-  if (saved) return;
-  const url = URL.createObjectURL(blob), box = $("result");
-  box.style.display = "flex";
-  box.innerHTML = (kind === "video" ? '<video controls playsinline></video>' : '<img alt="">') +
-    '<div class="row"><button id="shareBtn" style="display:none"></button><a download></a></div><div class="hint"></div>';
-  box.querySelector(kind === "video" ? "video" : "img").src = url;
-  const a = box.querySelector("a"); a.href = url; a.download = fname; a.textContent = "⬇ " + fname;
-  box.querySelector(".hint").textContent = tr("save_hint");
-  try {
-    const file = new File([blob], fname, { type: blob.type });
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      const sb = $("shareBtn"); sb.textContent = tr("share_btn"); sb.style.display = "inline-block";
-      sb.onclick = () => navigator.share({ files: [file], title: fname }).catch(() => {});
-    }
-  } catch (e2) { /* share unsupported */ }
-  if (!$("status").textContent) setStatus(tr("ready"), true);
-  try { box.scrollIntoView({ behavior: "smooth", block: "nearest" }); } catch (e3) { /* old browser */ }
+function downloadBlob(url, fname) {
+  const a = document.createElement("a");
+  a.href = url; a.download = fname; a.style.display = "none";
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { try { a.remove(); } catch (e) { /* ignore */ } }, 1500);
 }
+let resUrl = null;
+function deliver(blob, fname, kind) {
+  if (resUrl) { try { URL.revokeObjectURL(resUrl); } catch (e) { /* ignore */ } }
+  resUrl = URL.createObjectURL(blob);
+  $("resTitle").textContent = tr(kind === "video" ? "res_video" : "res_png");
+  const holder = $("resMedia"); holder.innerHTML = "";
+  const m = document.createElement(kind === "video" ? "video" : "img");
+  if (kind === "video") { m.controls = true; m.setAttribute("playsinline", ""); }
+  m.src = resUrl; holder.appendChild(m);
+  let file = null;
+  try { file = new File([blob], fname, { type: blob.type }); } catch (e) { /* old browser */ }
+  const canShare = !!(file && navigator.canShare && navigator.canShare({ files: [file] }));
+  $("resShare").hidden = !canShare;
+  $("resBrowser").hidden = !inTg;
+  $("resNote").textContent = "";
+  $("resSave").onclick = () => { downloadBlob(resUrl, fname); $("resNote").textContent = tr("res_started"); };
+  $("resShare").onclick = () => { navigator.share({ files: [file], title: fname }).catch(() => {}); };
+  $("resBrowser").onclick = () => {
+    const u = location.href.split("#")[0];
+    try { if (tg && tg.openLink) tg.openLink(u, { try_instant_view: false }); else window.open(u, "_blank"); } catch (e) { window.open(u, "_blank"); }
+  };
+  $("resModal").hidden = false;
+  try { downloadBlob(resUrl, fname); } catch (e) { /* needs a tap — button is there */ }
+}
+$("resClose").onclick = () => { $("resModal").hidden = true; const v = $("resMedia").querySelector("video"); if (v) v.pause(); };
+$("resModal").addEventListener("click", ev => { if (ev.target === $("resModal")) $("resClose").onclick(); });
 
 $("png").onclick = async () => {
   if (recording || !F) return;
@@ -953,70 +1276,86 @@ $("png").onclick = async () => {
   if (blob) deliver(blob, safeName() + ".png", "image");
 };
 
-const BUSY = ["rec", "png", "upload", "play", "restart", "skip", "speed", "scrub", "apply", "customBtn"];
+const BUSY = ["rec", "png", "upload", "play", "restart", "skip", "speed", "musicBtn", "scrub", "apply"];
 $("rec").onclick = async () => {
   if (recording) return;
   if (!window.MediaRecorder || !cv.captureStream) { setStatus(tr("rec_unsup")); return; }
-  const types = ["video/mp4;codecs=avc1.42E01E", "video/mp4", "video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"];
+  let wantAudio = false;
+  if (music.mode !== "off" && music.ensure() && (music.mode === "gen" || music.fileBuf)) {
+    try { await music.ctx.resume(); wantAudio = music.ctx.state === "running"; } catch (e) { wantAudio = false; }
+  } else if (music.mode === "file" && !music.fileBuf) setStatus(tr("music_none"));
+  const types = wantAudio
+    ? ["video/mp4;codecs=avc1.42E01E,mp4a.40.2", "video/mp4", "video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm"]
+    : ["video/mp4;codecs=avc1.42E01E", "video/mp4", "video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"];
   const mime = types.find(t => MediaRecorder.isTypeSupported(t));
   if (!mime) { setStatus(tr("rec_nofmt")); return; }
   recording = true;
   try { if (tg && tg.enableClosingConfirmation) tg.enableClosingConfirmation(); } catch (e) { /* ignore */ }
-  const oldSpeed = speedMul; speedMul = 1; $("speed").textContent = "1×";
+  const oldSpeed = speedMul; speedMul = 1; updateSpeedUI();
   cv.width = 720; cv.height = 1280; kScale = 1;
   BUSY.forEach(id => $(id).disabled = true);
-  $("result").style.display = "none"; $("result").innerHTML = "";
-  T = 0; playing = true; scrubbing = false;
+  T = 0; playing = true; scrubbing = false; setPlayUI(true);
+  const stream = cv.captureStream(30);
+  if (wantAudio) music.recDest.stream.getAudioTracks().forEach(t => stream.addTrack(t));
   const chunks = [];
-  const rec = new MediaRecorder(cv.captureStream(30), { mimeType: mime, videoBitsPerSecond: 6000000 });
+  const rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 6000000 });
   rec.ondataavailable = ev => { if (ev.data && ev.data.size) chunks.push(ev.data); };
   const finished = new Promise(res => { rec.onstop = res; });
   rec.start(500);
-  let endAt = 0;
+  if (wantAudio) { recording = false; music.start(0, 1); recording = true; }
+  let endAt = 0, faded = false;
   const timer = setInterval(() => {
     setStatus(tr("rec_prog", { p: Math.min(100, Math.round(T / TOTAL * 100)) }), true);
     if (T >= TOTAL) {
       if (!endAt) endAt = performance.now() + HOLD_END;
+      if (!faded && performance.now() >= endAt - 400) { faded = true; music.fade(0.35); }
       if (performance.now() >= endAt) { clearInterval(timer); rec.stop(); }
     }
-  }, 200);
+  }, 150);
   await finished;
-  recording = false; speedMul = oldSpeed; $("speed").textContent = speedMul + "×";
+  music.stop();
+  recording = false; speedMul = oldSpeed; updateSpeedUI();
   BUSY.forEach(id => $(id).disabled = false);
   try { if (tg && tg.disableClosingConfirmation) tg.disableClosingConfirmation(); } catch (e) { /* ignore */ }
   resize();
-  const ext = mime.indexOf("mp4") >= 0 ? "mp4" : "webm";
-  const blob = new Blob(chunks, { type: ext === "mp4" ? "video/mp4" : "video/webm" });
   setStatus("");
-  await deliver(blob, safeName() + "." + ext, "video");
-  T = 0; playing = true; $("play").textContent = "⏸";
+  const ext = mime.indexOf("mp4") >= 0 ? "mp4" : "webm";
+  deliver(new Blob(chunks, { type: ext === "mp4" ? "video/mp4" : "video/webm" }), safeName() + "." + ext, "video");
+  T = TOTAL; playing = false; setPlayUI(false);
 };
 
 /* ---------- start ---------- */
 if (tg) {
   try {
     tg.ready(); tg.expand();
-    if (tg.setHeaderColor) tg.setHeaderColor("#0a0a0c");
-    if (tg.setBackgroundColor) tg.setBackgroundColor("#0a0a0c");
+    if (tg.setHeaderColor) tg.setHeaderColor("#0a0b11");
+    if (tg.setBackgroundColor) tg.setBackgroundColor("#0a0b11");
     if (tg.disableVerticalSwipes) tg.disableVerticalSwipes();
   } catch (e) { /* ignore */ }
   document.addEventListener("click", ev => {
     try { if (tg.HapticFeedback && ev.target.closest && ev.target.closest("button")) tg.HapticFeedback.impactOccurred("light"); } catch (e) { /* ignore */ }
   });
 }
+// browsers only allow sound after a tap: start the music on the first touch
+["pointerdown", "touchend", "click"].forEach(ev => document.addEventListener(ev, () => {
+  if (music.mode !== "off" && playing && !music.bus && !recording && T < TOTAL) syncMusic();
+}, { passive: true }));
+
 lang = detectLang();
-applyLang();
 {
-  const lc = store("lc");
-  if (lc && LINE_COLORS.indexOf(lc) >= 0) lineMode = lc;
-  paintSwatches();
+  const lc = store("lc"), cc = store("cc"), mm = store("mm");
+  if (cc && /^#[0-9a-f]{6}$/i.test(cc)) { customColor = cc; hsv = hex2hsv(cc); }
+  if (lc && (lc === "rainbow" || PRESET_COLORS.indexOf(lc) >= 0 || /^#[0-9a-f]{6}$/i.test(lc))) lineMode = lc;
+  if (mm === "off" || mm === "gen") music.mode = mm;
   let w = ""; try { w = new URLSearchParams(location.search).get("wm") || ""; } catch (e) { /* ignore */ }
   wmText = (w || store("wm") || "").slice(0, 32);
   $("wm").value = wmText;
 }
+buildSwatches(); paintSwatches();
+applyLang();
 resize();
 requestAnimationFrame(t => { last = t; tick(t); });
 loadFlag(FLAGS[0]);
 </script>
 </body>
-</html>
+                                                              </html>
