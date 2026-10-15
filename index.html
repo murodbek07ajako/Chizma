@@ -124,7 +124,7 @@ input.cs::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:#
         <button data-m="edge"><b data-i="edge"></b><small data-i="edge_d"></small></button>
       </div>
       <div class="opt"><h4 data-i="detail"></h4><p data-i="detail_d"></p>
-        <input type="range" id="detail" min="1500" max="9000" step="250" value="4500" aria-label="Detail"></div>
+        <div class="timeline"><input type="range" id="detail" min="0" max="100" value="37" aria-label="Detail"><span id="detailVal" style="min-width:52px;text-align:right">4500</span></div></div>
     </section>
 
     <section class="card">
@@ -196,10 +196,8 @@ input.cs::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:#
 <script>
 "use strict";
 const TAU = Math.PI * 2;
-const M = 16384;                 // samples along the curve (power of two)
-const KMAX = 4000;
+let M = 16384;                   // samples along the curve (power of two, set per picture)
 const STAGES_FLAG = [1, 3, 10, 50, 200, 500, 1000];
-const STAGES_FREE = [1, 3, 10, 50, 200, 600, 1500, 4000];
 const INTRO = 1300, STAGE_T = 3700, DRAW_T = 3000, TRANS = 1500, HOLD_END = 1500;
 const SHOW = 30;
 const RED = "#ff4b3a", DIM = "#a3a8bb", TEAL = "#86d4bd", AMBER = "#d7ae65";
@@ -222,7 +220,7 @@ const I18N = {
     upload: "Rasm yuklash", upload_sub: "Telefondagi istalgan rasm chiziladi", rec: "Videoga olish", png: "Rasmga olish",
     save_note: "Video musiqa bilan real vaqtda yoziladi (~35 soniya). Tugagach “Saqlash” oynasi chiqadi.",
     how_title: "Rasm qanday chizilsin?", orig: "Asl rasm", orig_d: "oxirida haqiqiy rasm chiqadi", color: "Ranglar", color_d: "o'rtada aniqlangan ranglar (bayroq, logo)", edge: "Chiziq", edge_d: "oxirida faqat chiziq qoladi",
-    detail: "Detal", detail_d: "Ko'proq = batafsilroq va aniqroq, lekin sekinroq (“Asl rasm” va “Chiziq” rejimlarida).",
+    detail: "Detal", detail_d: "Ko'proq = batafsilroq va aniqroq, lekin sekinroq (“Asl rasm” va “Chiziq” rejimlarida). 30000 gacha: juda yuqori qiymatda telefon bir necha soniya o'ylanadi.",
     flags_title: "Tayyor bayroqlar",
     settings: "⚙ Sozlamalar", linecolor: "🎨 Chiziq rangi", linecolor_d: "Rasm qaysi rangda chizilishini tanlang. Oxirgi doira — o'z rangingizni yasaysiz.",
     music: "🎵 Musiqa", music_d: "Qo'shiqni tanlang — animatsiya shu musiqa bilan boshidan boshlanadi va video ham musiqa bilan yoziladi. O'z qo'shig'ingizni ham yuklash mumkin.",
@@ -250,7 +248,7 @@ const I18N = {
     upload: "Загрузить картинку", upload_sub: "Любая картинка с телефона будет нарисована", rec: "Записать видео", png: "Сохранить фото",
     save_note: "Видео пишется в реальном времени с музыкой (~35 сек). Потом откроется окно «Сохранить».",
     how_title: "Как рисовать картинку?", orig: "Оригинал", orig_d: "в конце — настоящее фото", color: "Цвета", color_d: "найденные цвета (флаги, логотипы)", edge: "Линия", edge_d: "в конце остаётся только линия",
-    detail: "Детали", detail_d: "Больше = подробнее и точнее, но медленнее (режимы «Оригинал» и «Линия»).",
+    detail: "Детали", detail_d: "Больше = подробнее и точнее, но медленнее (режимы «Оригинал» и «Линия»). До 30000: на очень высоких значениях телефон думает несколько секунд.",
     flags_title: "Готовые флаги",
     settings: "⚙ Настройки", linecolor: "🎨 Цвет линии", linecolor_d: "Каким цветом рисовать. Последний круг — создайте свой цвет.",
     music: "🎵 Музыка", music_d: "Выберите мелодию — анимация начнётся сначала с этой музыкой, и видео запишется с ней. Можно загрузить свою песню.",
@@ -278,7 +276,7 @@ const I18N = {
     upload: "Upload a picture", upload_sub: "Any picture from your phone gets drawn", rec: "Record video", png: "Save picture",
     save_note: "The video is recorded live with music (~35 s). A “Save” window opens when it ends.",
     how_title: "How should it be drawn?", orig: "Original", orig_d: "the real picture appears at the end", color: "Colors", color_d: "detected colors (flags, logos)", edge: "Line", edge_d: "only the line remains at the end",
-    detail: "Detail", detail_d: "More = more detailed and exact, but slower (“Original” and “Line” modes).",
+    detail: "Detail", detail_d: "More = more detailed and exact, but slower (“Original” and “Line” modes). Up to 30000: very high values make the phone think for a few seconds.",
     flags_title: "Ready-made flags",
     settings: "⚙ Settings", linecolor: "🎨 Line color", linecolor_d: "Pick the drawing color. The last circle lets you create your own.",
     music: "🎵 Music", music_d: "Pick a tune — the animation restarts with it and the video is recorded with it. You can also upload your own song.",
@@ -417,8 +415,12 @@ const FLAGS = [
 
 /* ---------- build the single closed curve + Fourier series ---------- */
 let F = null, STAGES = STAGES_FLAG, TOTAL = 0;
-const cosT = new Float64Array(M / 2), sinT = new Float64Array(M / 2);
-for (let i = 0; i < M / 2; i++) { cosT[i] = Math.cos(TAU * i / M); sinT[i] = Math.sin(TAU * i / M); }
+let cosT = null, sinT = null;
+function setM(m) {
+  M = m; cosT = new Float64Array(M / 2); sinT = new Float64Array(M / 2);
+  for (let i = 0; i < M / 2; i++) { cosT[i] = Math.cos(TAU * i / M); sinT[i] = Math.sin(TAU * i / M); }
+}
+setM(16384);
 // in-place radix-2 FFT of length M (forward, e^{-i...})
 function fft(re, im) {
   for (let i = 1, j = 0; i < M; i++) {
@@ -474,16 +476,17 @@ function buildFlag(flag) {
     lab[i] = raw[seg + 1][2];
   }
   // x(t)=a0+sum(a_k cos kt + b_k sin kt): all coefficients from one FFT per axis
-  const ax = new Float64Array(KMAX + 1), bx = new Float64Array(KMAX + 1);
-  const ay = new Float64Array(KMAX + 1), by = new Float64Array(KMAX + 1);
+  const KM = Math.min(M / 2 - 1, flag.kmax || (flag.free ? 4000 : 1000));
+  const ax = new Float64Array(KM + 1), bx = new Float64Array(KM + 1);
+  const ay = new Float64Array(KM + 1), by = new Float64Array(KM + 1);
   const re = new Float64Array(M), im = new Float64Array(M);
   re.set(X); fft(re, im);
   const a0x = re[0] / M;
-  for (let k = 1; k <= KMAX; k++) { ax[k] = 2 * re[k] / M; bx[k] = -2 * im[k] / M; }
+  for (let k = 1; k <= KM; k++) { ax[k] = 2 * re[k] / M; bx[k] = -2 * im[k] / M; }
   re.set(Y); im.fill(0); fft(re, im);
   const a0y = re[0] / M;
-  for (let k = 1; k <= KMAX; k++) { ay[k] = 2 * re[k] / M; by[k] = -2 * im[k] / M; }
-  flag._d = { X, Y, lab, ax, bx, ay, by, a0x, a0y, stage: {} };
+  for (let k = 1; k <= KM; k++) { ay[k] = 2 * re[k] / M; by[k] = -2 * im[k] / M; }
+  flag._d = { X, Y, lab, ax, bx, ay, by, a0x, a0y, km: KM, stage: {} };
   return flag;
 }
 
@@ -677,7 +680,7 @@ function smoothPoly(p) {
   return o;
 }
 function traceEdges(img, name, target) {
-  const side = target > 6500 ? 560 : target > 3500 ? 480 : 400;
+  const side = Math.min(1100, Math.max(400, Math.round(Math.sqrt(target) * 6 / 50) * 50));
   const { W, H, d } = rasterize(img, side), n = W * H;
   const gray = new Float32Array(n);
   for (let i = 0; i < n; i++) gray[i] = 0.299 * d[i * 4] + 0.587 * d[i * 4 + 1] + 0.114 * d[i * 4 + 2];
@@ -787,7 +790,9 @@ function traceEdges(img, name, target) {
   if (!polys.length) throw new Error("E_NOLINES");
   // link the pieces: always go to the nearest loose end (reversing a piece if that is shorter)
   const rem = polys.map((p, i) => i);
-  let startI = rem.reduce((a, i) => Math.min(...polys[i].map(p => p[1])) < Math.min(...polys[a].map(p => p[1])) ? i : a, rem[0]);
+  const mys = polys.map(p => { let m = Infinity; for (const q of p) if (q[1] < m) m = q[1]; return m; });
+  let startI = 0;
+  for (let i = 1; i < polys.length; i++) if (mys[i] < mys[startI]) startI = i;
   rem.splice(rem.indexOf(startI), 1);
   const seq = [polys[startI]];
   let pos = polys[startI][polys[startI].length - 1];
@@ -808,7 +813,14 @@ function traceEdges(img, name, target) {
     raw.push([(pt[0] + 0.5) / W * fw - fw / 2, (pt[1] + 0.5) / H * fh - fh / 2, si && k === 0 ? 2 : 1])));
   raw[0][2] = 1;
   raw.push([raw[0][0], raw[0][1], 2]);
-  return { name, title: "Drawing " + name, w: fw, h: fh, bg: "#ffffff", img, free: true, raw, shapes: [],
+  // how long is the line (in raster pixels)? decides how many samples / circles it needs
+  let Lu = 0;
+  for (let i = 1; i < raw.length; i++) Lu += Math.hypot(raw[i][0] - raw[i - 1][0], raw[i][1] - raw[i - 1][1]);
+  const pxLen = Lu * H / 2;
+  let MM = 16384;
+  while (MM < 2.2 * pxLen && MM < 65536) MM *= 2;
+  const kmax = Math.min(MM / 2 - 1, 20000, Math.max(4000, Math.round(pxLen / 2.2)));
+  return { name, title: "Drawing " + name, w: fw, h: fh, bg: "#ffffff", img, free: true, raw, shapes: [], M: MM, kmax,
     desc: "edges of a picture, one line of spinning circles" };
 }
 
@@ -883,7 +895,7 @@ function drawChain(circ, t, ox, oy, axis, color, alpha, s) {
   return [x, y];
 }
 function drawTrace(sd, f, fcx, fcy, s, alpha, jumpA = 1) {
-  const ST = 2, lab = F._d.lab, xs = sd.xs, ys = sd.ys;
+  const ST = Math.max(1, Math.round(M / (F.raw ? 16384 : 8192))), lab = F._d.lab, xs = sd.xs, ys = sd.ys;
   const n = Math.min(M - 1, Math.floor(f)), nS = Math.min(M / ST - 1, Math.floor(f / ST));
   const fr = f - n, nx = (n + 1) % M;
   const px = xs[n] + (xs[nx] - xs[n]) * fr, py = ys[n] + (ys[nx] - ys[n]) * fr;
@@ -910,7 +922,7 @@ function drawTrace(sd, f, fcx, fcy, s, alpha, jumpA = 1) {
 }
 
 /* ---------- main frame ---------- */
-let T = 0, playing = true, speedMul = 1, last = performance.now(), scrubbing = false;
+let T = 0, playing = true, speedMul = 1, last = performance.now(), scrubbing = false, flagSerial = 0, lastDrawKey = "";
 function bgGrad(stops) {
   const g = ctx.createLinearGradient(0, 0, 0, 1280);
   stops.forEach(([o, col]) => g.addColorStop(o, col));
@@ -1051,7 +1063,8 @@ function tick(now) {
     T += dt * speedMul;
     if (T >= TOTAL) { T = TOTAL; playing = false; setPlayUI(false); }
   }
-  frame();
+  const key = T + "|" + sizeMul + "|" + bgId + "|" + lineMode + "|" + wmText + "|" + flagSerial + "|" + cv.width;
+  if (playing || scrubbing || recording || key !== lastDrawKey) { frame(); lastDrawKey = key; }
   requestAnimationFrame(tick);
 }
 
@@ -1235,8 +1248,10 @@ async function loadSong(file) {
 
 /* ---------- flags, load, chips ---------- */
 function loadFlag(f) {
+  setM(f.M || 16384);
   F = buildFlag(f);
-  STAGES = f.free ? STAGES_FREE : STAGES_FLAG;
+  flagSerial++;
+  STAGES = f.free ? [1, 3, 10, 50, 200, 800, 2500, Math.max(3000, F._d.km)] : STAGES_FLAG;
   TOTAL = INTRO + STAGES.length * STAGE_T + TRANS;
   music._ev = null;
   T = 0; playing = true; setPlayUI(true); syncMusic();
@@ -1433,7 +1448,7 @@ function processImage() {
   setStatus(tr("tracing"), true);
   setTimeout(() => {
     try {
-      const detail = +$("detail").value;
+      const detail = detailFrom(+$("detail").value);
       let f = null;
       if (curMode === "color") f = traceColors(curImg, curName, true);
       else { f = traceEdges(curImg, curName, detail); f.showImg = curMode === "orig"; }
@@ -1477,7 +1492,8 @@ $("seg").addEventListener("click", ev => {
   processImage();
 });
 let detailTimer = 0;
-$("detail").addEventListener("input", () => { clearTimeout(detailTimer); detailTimer = setTimeout(() => { if (curMode !== "color") processImage(); }, 350); });
+const detailFrom = v => Math.round(1500 * Math.pow(20, v / 100) / 100) * 100;
+$("detail").addEventListener("input", () => { $("detailVal").textContent = detailFrom(+$("detail").value); clearTimeout(detailTimer); detailTimer = setTimeout(() => { if (curMode !== "color") processImage(); }, 350); });
 
 /* ---------- output: video / PNG -> sent to the bot chat (or saved) ---------- */
 const safeName = () => (F.name || "drawing").replace(/[^\w\-]+/g, "_");
@@ -1635,9 +1651,10 @@ lang = detectLang();
 }
 buildSwatches(); paintSwatches();
 applyLang();
+$("detailVal").textContent = detailFrom(+$("detail").value);
 resize();
 requestAnimationFrame(t => { last = t; tick(t); });
 loadFlag(FLAGS[0]);
 </script>
 </body>
-        </html>
+  </html>
