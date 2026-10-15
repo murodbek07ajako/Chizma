@@ -119,12 +119,12 @@ input.cs::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:#
     <section class="card" id="traceCard" hidden>
       <h3 data-i="how_title"></h3>
       <div class="seg3" id="seg">
-        <button data-m="auto" class="on"><b data-i="auto"></b><small data-i="auto_d"></small></button>
+        <button data-m="orig" class="on"><b data-i="orig"></b><small data-i="orig_d"></small></button>
         <button data-m="color"><b data-i="color"></b><small data-i="color_d"></small></button>
         <button data-m="edge"><b data-i="edge"></b><small data-i="edge_d"></small></button>
       </div>
       <div class="opt"><h4 data-i="detail"></h4><p data-i="detail_d"></p>
-        <input type="range" id="detail" min="1000" max="5000" step="100" value="3200" aria-label="Detail"></div>
+        <input type="range" id="detail" min="1500" max="9000" step="250" value="4500" aria-label="Detail"></div>
     </section>
 
     <section class="card">
@@ -196,13 +196,13 @@ input.cs::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:#
 <script>
 "use strict";
 const TAU = Math.PI * 2;
-const M = 8192;                  // samples along the curve (power of two)
-const KMAX = 2000;
+const M = 16384;                 // samples along the curve (power of two)
+const KMAX = 4000;
 const STAGES_FLAG = [1, 3, 10, 50, 200, 500, 1000];
-const STAGES_FREE = [1, 3, 10, 50, 200, 500, 1000, 2000];
+const STAGES_FREE = [1, 3, 10, 50, 200, 600, 1500, 4000];
 const INTRO = 1300, STAGE_T = 3700, DRAW_T = 3000, TRANS = 1500, HOLD_END = 1500;
 const SHOW = 30;
-const RED = "#ff4b3a", DIM = "#b0473f", TEAL = "#86d4bd", AMBER = "#d7ae65";
+const RED = "#ff4b3a", DIM = "#a3a8bb", TEAL = "#86d4bd", AMBER = "#d7ae65";
 const SERIF = 'Georgia, "Times New Roman", serif';
 const SANS = '"DejaVu Sans", Verdana, system-ui, sans-serif';
 const CFG = window.APP_CONFIG || {};      // config.js faylidan o'qiladi
@@ -221,8 +221,8 @@ const I18N = {
     pause: "Pauza", play: "Davom", replay: "Qayta", result: "Natija", speed: "Tezlik", music_on: "Musiqa: yoniq", music_off: "Musiqa: o'chiq",
     upload: "Rasm yuklash", upload_sub: "Telefondagi istalgan rasm chiziladi", rec: "Videoga olish", png: "Rasmga olish",
     save_note: "Video musiqa bilan real vaqtda yoziladi (~35 soniya). Tugagach “Saqlash” oynasi chiqadi.",
-    how_title: "Rasm qanday chizilsin?", auto: "Avto", auto_d: "o'zi tanlaydi", color: "Ranglar", color_d: "bayroq, logo", edge: "Chiziq", edge_d: "foto, portret",
-    detail: "Detal", detail_d: "Ko'proq = batafsilroq, lekin sekinroq (faqat “Chiziq” rejimida).",
+    how_title: "Rasm qanday chizilsin?", orig: "Asl rasm", orig_d: "oxirida haqiqiy rasm chiqadi", color: "Ranglar", color_d: "o'rtada aniqlangan ranglar (bayroq, logo)", edge: "Chiziq", edge_d: "oxirida faqat chiziq qoladi",
+    detail: "Detal", detail_d: "Ko'proq = batafsilroq va aniqroq, lekin sekinroq (“Asl rasm” va “Chiziq” rejimlarida).",
     flags_title: "Tayyor bayroqlar",
     settings: "⚙ Sozlamalar", linecolor: "🎨 Chiziq rangi", linecolor_d: "Rasm qaysi rangda chizilishini tanlang. Oxirgi doira — o'z rangingizni yasaysiz.",
     music: "🎵 Musiqa", music_d: "Qo'shiqni tanlang — animatsiya shu musiqa bilan boshidan boshlanadi va video ham musiqa bilan yoziladi. O'z qo'shig'ingizni ham yuklash mumkin.",
@@ -249,8 +249,8 @@ const I18N = {
     pause: "Пауза", play: "Играть", replay: "Заново", result: "Итог", speed: "Скорость", music_on: "Музыка: вкл", music_off: "Музыка: выкл",
     upload: "Загрузить картинку", upload_sub: "Любая картинка с телефона будет нарисована", rec: "Записать видео", png: "Сохранить фото",
     save_note: "Видео пишется в реальном времени с музыкой (~35 сек). Потом откроется окно «Сохранить».",
-    how_title: "Как рисовать картинку?", auto: "Авто", auto_d: "выберет само", color: "Цвета", color_d: "флаги, логотипы", edge: "Линия", edge_d: "фото, портреты",
-    detail: "Детали", detail_d: "Больше = подробнее, но медленнее (только режим «Линия»).",
+    how_title: "Как рисовать картинку?", orig: "Оригинал", orig_d: "в конце — настоящее фото", color: "Цвета", color_d: "найденные цвета (флаги, логотипы)", edge: "Линия", edge_d: "в конце остаётся только линия",
+    detail: "Детали", detail_d: "Больше = подробнее и точнее, но медленнее (режимы «Оригинал» и «Линия»).",
     flags_title: "Готовые флаги",
     settings: "⚙ Настройки", linecolor: "🎨 Цвет линии", linecolor_d: "Каким цветом рисовать. Последний круг — создайте свой цвет.",
     music: "🎵 Музыка", music_d: "Выберите мелодию — анимация начнётся сначала с этой музыкой, и видео запишется с ней. Можно загрузить свою песню.",
@@ -277,8 +277,8 @@ const I18N = {
     pause: "Pause", play: "Play", replay: "Replay", result: "Result", speed: "Speed", music_on: "Music: on", music_off: "Music: off",
     upload: "Upload a picture", upload_sub: "Any picture from your phone gets drawn", rec: "Record video", png: "Save picture",
     save_note: "The video is recorded live with music (~35 s). A “Save” window opens when it ends.",
-    how_title: "How should it be drawn?", auto: "Auto", auto_d: "picks for you", color: "Colors", color_d: "flags, logos", edge: "Line", edge_d: "photos, portraits",
-    detail: "Detail", detail_d: "More = more detailed but slower (“Line” mode only).",
+    how_title: "How should it be drawn?", orig: "Original", orig_d: "the real picture appears at the end", color: "Colors", color_d: "detected colors (flags, logos)", edge: "Line", edge_d: "only the line remains at the end",
+    detail: "Detail", detail_d: "More = more detailed and exact, but slower (“Original” and “Line” modes).",
     flags_title: "Ready-made flags",
     settings: "⚙ Settings", linecolor: "🎨 Line color", linecolor_d: "Pick the drawing color. The last circle lets you create your own.",
     music: "🎵 Music", music_d: "Pick a tune — the animation restarts with it and the video is recorded with it. You can also upload your own song.",
@@ -417,8 +417,27 @@ const FLAGS = [
 
 /* ---------- build the single closed curve + Fourier series ---------- */
 let F = null, STAGES = STAGES_FLAG, TOTAL = 0;
-const cosT = new Float64Array(M), sinT = new Float64Array(M);
-for (let i = 0; i < M; i++) { cosT[i] = Math.cos(TAU * i / M); sinT[i] = Math.sin(TAU * i / M); }
+const cosT = new Float64Array(M / 2), sinT = new Float64Array(M / 2);
+for (let i = 0; i < M / 2; i++) { cosT[i] = Math.cos(TAU * i / M); sinT[i] = Math.sin(TAU * i / M); }
+// in-place radix-2 FFT of length M (forward, e^{-i...})
+function fft(re, im) {
+  for (let i = 1, j = 0; i < M; i++) {
+    let bit = M >> 1;
+    for (; j & bit; bit >>= 1) j ^= bit;
+    j ^= bit;
+    if (i < j) { let t = re[i]; re[i] = re[j]; re[j] = t; t = im[i]; im[i] = im[j]; im[j] = t; }
+  }
+  for (let len = 2; len <= M; len <<= 1) {
+    const half = len >> 1, step = M / len;
+    for (let i = 0; i < M; i += len) {
+      for (let k = 0; k < half; k++) {
+        const wr = cosT[k * step], wi = -sinT[k * step], a = i + k, b = a + half;
+        const xr = re[b] * wr - im[b] * wi, xi = re[b] * wi + im[b] * wr;
+        re[b] = re[a] - xr; im[b] = im[a] - xi; re[a] += xr; im[a] += xi;
+      }
+    }
+  }
+}
 
 function buildFlag(flag) {
   let raw;
@@ -454,20 +473,16 @@ function buildFlag(flag) {
     Y[i] = raw[seg][1] + (raw[seg + 1][1] - raw[seg][1]) * t;
     lab[i] = raw[seg + 1][2];
   }
-  const kmax = flag.free ? KMAX : 1000;
+  // x(t)=a0+sum(a_k cos kt + b_k sin kt): all coefficients from one FFT per axis
   const ax = new Float64Array(KMAX + 1), bx = new Float64Array(KMAX + 1);
   const ay = new Float64Array(KMAX + 1), by = new Float64Array(KMAX + 1);
-  let sx = 0, sy = 0;
-  for (let i = 0; i < M; i++) { sx += X[i]; sy += Y[i]; }
-  const a0x = sx / M, a0y = sy / M;
-  for (let k = 1; k <= kmax; k++) {
-    let p = 0, q = 0, r = 0, s = 0;
-    for (let i = 0; i < M; i++) {
-      const idx = (k * i) & (M - 1), c = cosT[idx], sn = sinT[idx];
-      p += X[i] * c; q += X[i] * sn; r += Y[i] * c; s += Y[i] * sn;
-    }
-    ax[k] = 2 * p / M; bx[k] = 2 * q / M; ay[k] = 2 * r / M; by[k] = 2 * s / M;
-  }
+  const re = new Float64Array(M), im = new Float64Array(M);
+  re.set(X); fft(re, im);
+  const a0x = re[0] / M;
+  for (let k = 1; k <= KMAX; k++) { ax[k] = 2 * re[k] / M; bx[k] = -2 * im[k] / M; }
+  re.set(Y); im.fill(0); fft(re, im);
+  const a0y = re[0] / M;
+  for (let k = 1; k <= KMAX; k++) { ay[k] = 2 * re[k] / M; by[k] = -2 * im[k] / M; }
   flag._d = { X, Y, lab, ax, bx, ay, by, a0x, a0y, stage: {} };
   return flag;
 }
@@ -475,14 +490,15 @@ function buildFlag(flag) {
 function stageData(N) {
   const D = F._d;
   if (D.stage[N]) return D.stage[N];
-  const xs = new Float64Array(M).fill(D.a0x), ys = new Float64Array(M).fill(D.a0y);
-  for (let k = 1; k <= N; k++) {
-    const a = D.ax[k], b = D.bx[k], c = D.ay[k], d = D.by[k];
-    for (let i = 0; i < M; i++) {
-      const idx = (k * i) & (M - 1), co = cosT[idx], si = sinT[idx];
-      xs[i] += a * co + b * si; ys[i] += c * co + d * si;
-    }
-  }
+  // partial sum of the first N harmonics = one inverse transform
+  const rec = (a0, A, B) => {
+    const re = new Float64Array(M), im = new Float64Array(M);
+    re[0] = a0;
+    for (let k = 1; k <= N; k++) { re[k] = A[k]; im[k] = B[k]; }
+    fft(re, im);
+    return re;
+  };
+  const xs = rec(D.a0x, D.ax, D.bx), ys = rec(D.a0y, D.ay, D.by);
   let num = 0;
   for (let i = 0; i < M; i++) num += (xs[i] - D.X[i]) ** 2 + (ys[i] - D.Y[i]) ** 2;
   const err = 100 * Math.sqrt(num / M) / F.h;
@@ -511,7 +527,7 @@ const hex = p => "#" + [p.r, p.g, p.b].map(v => Math.round(v).toString(16).padSt
 
 /* Mode 1: flat colour regions -> outlines (flags, logos, cartoons) */
 function traceColors(img, name, force) {
-  const { W, H, d } = rasterize(img, 260), n = W * H;
+  const { W, H, d } = rasterize(img, 340), n = W * H;
   const hist = new Map();
   for (let i = 0; i < n; i++) {
     const r = d[i * 4], gg = d[i * 4 + 1], b = d[i * 4 + 2];
@@ -583,7 +599,7 @@ function traceColors(img, name, force) {
       pts.push([cx, cy]);
     }
     if (pts.length < 4) continue;
-    const simp = rdpClosed(pts, 0.9);
+    const simp = rdpClosed(pts, 0.7);
     if (simp.length < 3) continue;
     shapes.push({ k: "poly", color: hex(pal[cp.col]),
       pts: simp.map(([px, py]) => [(px + 0.5) / W * fw - fw / 2, (py + 0.5) / H * fh - fh / 2]) });
@@ -614,48 +630,106 @@ function rdpClosed(pts, eps) {
   return a.slice(0, -1).concat(b.slice(0, -1));
 }
 
-/* Mode 2: edges of anything -> one long line (photos, portraits, sketches) */
-function traceEdges(img, name, target) {
-  const { W, H, d } = rasterize(img, 300), n = W * H;
-  let gray = new Float32Array(n);
-  for (let i = 0; i < n; i++) gray[i] = 0.299 * d[i * 4] + 0.587 * d[i * 4 + 1] + 0.114 * d[i * 4 + 2];
-  // 3x3 binomial blur
-  const bl = new Float32Array(n);
-  for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) {
-    const i = y * W + x;
-    bl[i] = (4 * gray[i] + 2 * (gray[i - 1] + gray[i + 1] + gray[i - W] + gray[i + W]) +
-      gray[i - W - 1] + gray[i - W + 1] + gray[i + W - 1] + gray[i + W + 1]) / 16;
+/* Mode 2: edges of anything -> clean, thin lines -> one continuous path */
+function gauss5(src, W, H) {
+  const k = [0.0625, 0.25, 0.375, 0.25, 0.0625], tmp = new Float32Array(W * H), out = new Float32Array(W * H);
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    let v = 0;
+    for (let t = -2; t <= 2; t++) { const xx = Math.min(W - 1, Math.max(0, x + t)); v += k[t + 2] * src[y * W + xx]; }
+    tmp[y * W + x] = v;
   }
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    let v = 0;
+    for (let t = -2; t <= 2; t++) { const yy = Math.min(H - 1, Math.max(0, y + t)); v += k[t + 2] * tmp[yy * W + x]; }
+    out[y * W + x] = v;
+  }
+  return out;
+}
+function thinZS(bin, W, pts) {
+  let cur = pts.slice(), changed = true;
+  while (changed) {
+    changed = false;
+    for (let pass = 0; pass < 2; pass++) {
+      const del = [];
+      for (const i of cur) {
+        const p2 = bin[i - W], p3 = bin[i - W + 1], p4 = bin[i + 1], p5 = bin[i + W + 1], p6 = bin[i + W], p7 = bin[i + W - 1], p8 = bin[i - 1], p9 = bin[i - W - 1];
+        const B = p2 + p3 + p4 + p5 + p6 + p7 + p8 + p9;
+        if (B < 2 || B > 6) continue;
+        const A = (!p2 && p3) + (!p3 && p4) + (!p4 && p5) + (!p5 && p6) + (!p6 && p7) + (!p7 && p8) + (!p8 && p9) + (!p9 && p2);
+        if (A !== 1) continue;
+        if (pass === 0) { if (p2 && p4 && p6) continue; if (p4 && p6 && p8) continue; }
+        else { if (p2 && p4 && p8) continue; if (p2 && p6 && p8) continue; }
+        del.push(i);
+      }
+      if (del.length) { changed = true; for (const i of del) bin[i] = 0; cur = cur.filter(i => bin[i]); }
+    }
+  }
+  return cur;
+}
+function smoothPoly(p) {
+  const m = p.length;
+  if (m < 6) return p;
+  const o = new Array(m);
+  for (let i = 0; i < m; i++) {
+    if (i < 2 || i > m - 3) { o[i] = p[i]; continue; }
+    o[i] = [(p[i - 2][0] + p[i - 1][0] + p[i][0] + p[i + 1][0] + p[i + 2][0]) / 5, (p[i - 2][1] + p[i - 1][1] + p[i][1] + p[i + 1][1] + p[i + 2][1]) / 5];
+  }
+  return o;
+}
+function traceEdges(img, name, target) {
+  const side = target > 6500 ? 560 : target > 3500 ? 480 : 400;
+  const { W, H, d } = rasterize(img, side), n = W * H;
+  const gray = new Float32Array(n);
+  for (let i = 0; i < n; i++) gray[i] = 0.299 * d[i * 4] + 0.587 * d[i * 4 + 1] + 0.114 * d[i * 4 + 2];
+  // local contrast normalisation: dark areas (hair, shadows) get as much detail as bright ones
+  const R = Math.max(8, Math.round(Math.max(W, H) * 0.03)), iw = W + 1;
+  const S1 = new Float64Array(iw * (H + 1)), S2 = new Float64Array(iw * (H + 1));
+  for (let y = 0; y < H; y++) {
+    let r1 = 0, r2 = 0;
+    for (let x = 0; x < W; x++) {
+      const g = gray[y * W + x]; r1 += g; r2 += g * g;
+      S1[(y + 1) * iw + x + 1] = S1[y * iw + x + 1] + r1; S2[(y + 1) * iw + x + 1] = S2[y * iw + x + 1] + r2;
+    }
+  }
+  const lcn = new Float32Array(n);
+  for (let y = 0; y < H; y++) {
+    const y0 = Math.max(0, y - R), y1 = Math.min(H, y + R + 1);
+    for (let x = 0; x < W; x++) {
+      const x0 = Math.max(0, x - R), x1 = Math.min(W, x + R + 1), cnt = (x1 - x0) * (y1 - y0);
+      const s1 = S1[y1 * iw + x1] - S1[y0 * iw + x1] - S1[y1 * iw + x0] + S1[y0 * iw + x0];
+      const s2 = S2[y1 * iw + x1] - S2[y0 * iw + x1] - S2[y1 * iw + x0] + S2[y0 * iw + x0];
+      const mu = s1 / cnt, sd = Math.sqrt(Math.max(0, s2 / cnt - mu * mu));
+      lcn[y * W + x] = (gray[y * W + x] - mu) / (sd + 14) * 50;
+    }
+  }
+  const bl = gauss5(lcn, W, H);
   const mag = new Float32Array(n), dir = new Uint8Array(n);
+  let maxMag = 0;
   for (let y = 2; y < H - 2; y++) for (let x = 2; x < W - 2; x++) {
     const i = y * W + x;
     const gx = (bl[i - W + 1] + 2 * bl[i + 1] + bl[i + W + 1]) - (bl[i - W - 1] + 2 * bl[i - 1] + bl[i + W - 1]);
     const gy = (bl[i + W - 1] + 2 * bl[i + W] + bl[i + W + 1]) - (bl[i - W - 1] + 2 * bl[i - W] + bl[i - W + 1]);
-    mag[i] = Math.hypot(gx, gy);
-    let deg = (Math.atan2(gy, gx) * 180 / Math.PI + 180) % 180;
+    const m = Math.hypot(gx, gy); mag[i] = m; if (m > maxMag) maxMag = m;
+    const deg = (Math.atan2(gy, gx) * 180 / Math.PI + 180) % 180;
     dir[i] = deg < 22.5 || deg >= 157.5 ? 0 : deg < 67.5 ? 1 : deg < 112.5 ? 2 : 3;
   }
-  const OFF = [[1, 0], [1, 1], [0, 1], [1, -1]];
+  const OFF = [[1, 0], [1, 1], [0, 1], [1, -1]], floor = maxMag * 0.04;
   const cand = new Uint8Array(n), list = [];
   for (let y = 2; y < H - 2; y++) for (let x = 2; x < W - 2; x++) {
     const i = y * W + x, m = mag[i];
-    if (m < 6) continue;
+    if (m < floor) continue;
     const [ox, oy] = OFF[dir[i]];
     if (m >= mag[(y + oy) * W + x + ox] && m >= mag[(y - oy) * W + x - ox]) { cand[i] = 1; list.push(i); }
   }
   if (list.length < 30) throw new Error("E_FLAT");
   const N8 = [-W - 1, -W, -W + 1, -1, 1, W - 1, W, W + 1];
   function hyst(hi) {
-    const lo = hi * 0.45, keep = new Uint8Array(n), st = [];
+    const lo = hi * 0.5, keep = new Uint8Array(n), st = [];
     for (const i of list) if (mag[i] >= hi) { keep[i] = 1; st.push(i); }
     while (st.length) {
       const p = st.pop();
-      for (const o of N8) {
-        const q = p + o;
-        if (cand[q] && !keep[q] && mag[q] >= lo) { keep[q] = 1; st.push(q); }
-      }
+      for (const o of N8) { const q = p + o; if (cand[q] && !keep[q] && mag[q] >= lo) { keep[q] = 1; st.push(q); } }
     }
-    // drop tiny fragments
     const seen = new Uint8Array(n), out = [];
     for (const s0 of list) {
       if (!keep[s0] || seen[s0]) continue;
@@ -664,45 +738,74 @@ function traceEdges(img, name, target) {
         const p = comp[a];
         for (const o of N8) { const q = p + o; if (keep[q] && !seen[q]) { seen[q] = 1; comp.push(q); } }
       }
-      if (comp.length >= 10) for (const c of comp) out.push(c);
+      if (comp.length >= 12) for (const c of comp) out.push(c);
     }
     return out;
   }
-  let hi = 0;
-  for (const i of list) if (mag[i] > hi) hi = mag[i];
-  const base = Math.min(14, hi * 0.3);
-  let best = hyst(base);
+  let best = hyst(maxMag * 0.1);
   if (best.length > target) {
-    let a = base, b = hi;
+    let a = maxMag * 0.1, b = maxMag;
     for (let it = 0; it < 12; it++) {
       const mid = (a + b) / 2, r = hyst(mid);
       if (r.length > target) a = mid; else { b = mid; best = r; }
     }
   }
   if (best.length < 30) throw new Error("E_NOLINES");
-  // nearest-neighbour walk -> one continuous path
-  const px = new Float32Array(best.length), py = new Float32Array(best.length);
-  best.forEach((i, k) => { px[k] = i % W; py[k] = (i - (i % W)) / W; });
-  let cnt = best.length, cur = 0;
-  for (let k = 1; k < cnt; k++) if (py[k] < py[cur] || (py[k] === py[cur] && px[k] < px[cur])) cur = k;
-  const order = [];
-  while (cnt > 0) {
-    order.push([px[cur], py[cur]]);
-    px[cur] = px[cnt - 1]; py[cur] = py[cnt - 1]; cnt--;
-    if (!cnt) break;
-    const lx = order[order.length - 1][0], ly = order[order.length - 1][1];
-    let bi = 0, bd = Infinity;
-    for (let k = 0; k < cnt; k++) {
-      const dx = px[k] - lx, dy = py[k] - ly, dd = dx * dx + dy * dy;
-      if (dd < bd) { bd = dd; bi = k; if (dd <= 1) break; }
+  // thin to 1-pixel lines, then trace every connected piece into a smooth polyline
+  const bin = new Uint8Array(n);
+  for (const i of best) bin[i] = 1;
+  const pts = thinZS(bin, W, best);
+  const vis = new Uint8Array(n), polys = [];
+  const NB = [[1, 0, 1], [-1, 0, -1], [0, 1, W], [0, -1, -W], [1, 1, W + 1], [-1, 1, W - 1], [1, -1, 1 - W], [-1, -1, -1 - W]];
+  const deg = i => { let c = 0; for (const o of NB) c += bin[i + o[2]]; return c; };
+  const order0 = pts.slice().sort((p, q) => deg(p) - deg(q));   // endpoints first
+  for (const s0 of order0) {
+    if (vis[s0]) continue;
+    const path = [s0], stack = [s0]; vis[s0] = 1;
+    let dx = 0, dy = 0;
+    while (stack.length) {
+      const cur = stack[stack.length - 1];
+      let bq = -1, bs = -9, bdx = 0, bdy = 0;
+      for (const o of NB) {
+        const q = cur + o[2];
+        if (!bin[q] || vis[q]) continue;
+        const len = o[0] && o[1] ? 1.4142 : 1;
+        const score = (dx || dy) ? (o[0] * dx + o[1] * dy) / (len * Math.hypot(dx, dy)) : (o[0] && o[1] ? 0 : 1);
+        if (score > bs) { bs = score; bq = q; bdx = o[0]; bdy = o[1]; }
+      }
+      if (bq >= 0) { vis[bq] = 1; stack.push(bq); path.push(bq); dx = bdx; dy = bdy; }
+      else { stack.pop(); if (stack.length) path.push(stack[stack.length - 1]); dx = 0; dy = 0; }
     }
-    cur = bi;
+    if (path.length < 6) continue;
+    let poly = path.map(i => [i % W, (i - (i % W)) / W]);
+    poly = smoothPoly(smoothPoly(poly));
+    const f0 = poly[0], f1 = poly[poly.length - 1];
+    if ((f0[0] - f1[0]) ** 2 + (f0[1] - f1[1]) ** 2 < 4) { poly = rdpClosed(poly, 0.45); poly.push(poly[0]); }   // walk returned to its start
+    else poly = rdp(poly, 0.45);
+    if (poly.length >= 2) polys.push(poly);
   }
-  const fh = 2, fw = 2 * W / H;
-  const raw = order.map((p, k) => {
-    const lab = k && Math.hypot(p[0] - order[k - 1][0], p[1] - order[k - 1][1]) > 2.3 ? 2 : 1;
-    return [(p[0] + 0.5) / W * fw - fw / 2, (p[1] + 0.5) / H * fh - fh / 2, lab];
-  });
+  if (!polys.length) throw new Error("E_NOLINES");
+  // link the pieces: always go to the nearest loose end (reversing a piece if that is shorter)
+  const rem = polys.map((p, i) => i);
+  let startI = rem.reduce((a, i) => Math.min(...polys[i].map(p => p[1])) < Math.min(...polys[a].map(p => p[1])) ? i : a, rem[0]);
+  rem.splice(rem.indexOf(startI), 1);
+  const seq = [polys[startI]];
+  let pos = polys[startI][polys[startI].length - 1];
+  while (rem.length) {
+    let bi = -1, bd = Infinity, brev = false;
+    for (let r = 0; r < rem.length; r++) {
+      const p = polys[rem[r]], a = p[0], b = p[p.length - 1];
+      const d0 = (a[0] - pos[0]) ** 2 + (a[1] - pos[1]) ** 2, d1 = (b[0] - pos[0]) ** 2 + (b[1] - pos[1]) ** 2;
+      if (d0 < bd) { bd = d0; bi = r; brev = false; }
+      if (d1 < bd) { bd = d1; bi = r; brev = true; }
+    }
+    const p = polys[rem[bi]]; rem.splice(bi, 1);
+    const q = brev ? p.slice().reverse() : p;
+    seq.push(q); pos = q[q.length - 1];
+  }
+  const fh = 2, fw = 2 * W / H, raw = [];
+  seq.forEach((p, si) => p.forEach((pt, k) =>
+    raw.push([(pt[0] + 0.5) / W * fw - fw / 2, (pt[1] + 0.5) / H * fh - fh / 2, si && k === 0 ? 2 : 1])));
   raw[0][2] = 1;
   raw.push([raw[0][0], raw[0][1], 2]);
   return { name, title: "Drawing " + name, w: fw, h: fh, bg: "#ffffff", img, free: true, raw, shapes: [],
@@ -715,7 +818,7 @@ const stageEl = document.getElementById("stage");
 let kScale = 1, recording = false;
 function resize() {
   if (recording) return;
-  const w = stageEl.clientWidth, dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+  const w = stageEl.clientWidth, dpr = Math.min(window.devicePixelRatio || 1, 2);
   cv.width = Math.round(w * dpr); cv.height = Math.round(w * 16 / 9 * dpr);
   kScale = cv.width / 720;
 }
@@ -780,26 +883,27 @@ function drawChain(circ, t, ox, oy, axis, color, alpha, s) {
   return [x, y];
 }
 function drawTrace(sd, f, fcx, fcy, s, alpha, jumpA = 1) {
-  const lab = F._d.lab, xs = sd.xs, ys = sd.ys;
-  const n = Math.min(M - 1, Math.floor(f));
+  const ST = 2, lab = F._d.lab, xs = sd.xs, ys = sd.ys;
+  const n = Math.min(M - 1, Math.floor(f)), nS = Math.min(M / ST - 1, Math.floor(f / ST));
   const fr = f - n, nx = (n + 1) % M;
   const px = xs[n] + (xs[nx] - xs[n]) * fr, py = ys[n] + (ys[nx] - ys[n]) * fr;
-  ctx.save(); ctx.globalAlpha = alpha; ctx.lineJoin = "round"; ctx.lineCap = "round";
-  const P = i => [fcx + xs[i % M] * s, fcy + ys[i % M] * s];
+  ctx.save(); ctx.lineJoin = "round"; ctx.lineCap = "round";
+  const P = k => [fcx + xs[k * ST] * s, fcy + ys[k * ST] * s], Lb = k => lab[k * ST];
   const col = (l, i) => l === 2 ? DIM : l ? (lineMode === "rainbow" ? `hsl(${(i / M * 720) % 360},85%,66%)` : lineMode) : RED;
-  const wid = l => l === 2 ? 2 : (F.raw ? 3 : 4.5);
-  let i = 0;
-  while (i < n) {
-    let j = i; const l = lab[i];
-    ctx.beginPath(); ctx.moveTo(...P(i));
-    while (j < n && lab[j + 1] === l && !(lineMode === "rainbow" && l === 1 && j - i >= 40)) { j++; ctx.lineTo(...P(j)); }
-    if (j < n) { j++; ctx.lineTo(...P(j)); }
-    ctx.globalAlpha = alpha * (l === 2 ? jumpA : 1);
-    ctx.strokeStyle = col(l, i); ctx.lineWidth = wid(l); ctx.stroke();
-    i = j > i ? j : i + 1;
+  const wid = l => l === 2 ? 1.2 : (F.raw ? 2.4 : 4.5);
+  const al = l => alpha * (l === 2 ? 0.22 * jumpA : 1);
+  let k = 0;
+  while (k < nS) {
+    let j = k; const l = Lb(k);
+    ctx.beginPath(); ctx.moveTo(...P(k));
+    while (j < nS && Lb(j + 1) === l && !(lineMode === "rainbow" && l === 1 && j - k >= 20)) { j++; ctx.lineTo(...P(j)); }
+    if (j < nS) { j++; ctx.lineTo(...P(j)); }
+    ctx.globalAlpha = al(l);
+    ctx.strokeStyle = col(l, k * ST); ctx.lineWidth = wid(l); ctx.stroke();
+    k = j > k ? j : k + 1;
   }
-  ctx.beginPath(); ctx.moveTo(...P(n)); ctx.lineTo(fcx + px * s, fcy + py * s);
-  ctx.globalAlpha = alpha * (lab[n] === 2 ? jumpA : 1);
+  ctx.beginPath(); ctx.moveTo(...P(nS)); ctx.lineTo(fcx + px * s, fcy + py * s);
+  ctx.globalAlpha = al(lab[n]);
   ctx.strokeStyle = col(lab[n], n); ctx.lineWidth = wid(lab[n]); ctx.stroke();
   ctx.restore();
   return [fcx + px * s, fcy + py * s];
@@ -895,7 +999,13 @@ function frame() {
   ctx.moveTo(fcx - 300, fcy); ctx.lineTo(fcx + 300, fcy);
   ctx.stroke();
 
+  const keepLine = !!F.raw && !F.showImg;
   fillFlag(F, fcx, fcy, s, 0.13 + 0.87 * e);
+  if (F.showImg && F.img && e > 0.001) {
+    ctx.save(); ctx.globalAlpha = e;
+    ctx.drawImage(F.img, fcx - F.w * s / 2, fcy - F.h * s / 2, F.w * s, F.h * s);
+    ctx.restore();
+  }
 
   if (stageIdx >= 0) {
     const N = STAGES[stageIdx], sd = stageData(N);
@@ -905,7 +1015,7 @@ function frame() {
       const ox = fcx + D.a0x * s, oy = fcy + D.a0y * s;
       const ex = drawChain(sd.cx, t, ox, fcy - 350, 0, TEAL, chainA, s);
       const ey = drawChain(sd.cy, t, fcx - 340, oy, 1, AMBER, chainA, s);
-      const pen = drawTrace(sd, fi >= M ? M - 1 : fi, fcx, fcy, s, F.raw ? 1 : 1 - e, F.raw ? 1 - e : 1);
+      const pen = drawTrace(sd, fi >= M ? M - 1 : fi, fcx, fcy, s, keepLine ? 1 : 1 - e, keepLine ? 1 - e : 1);
       ctx.save(); ctx.setLineDash([4, 5]); ctx.strokeStyle = `rgba(255,255,255,${0.3 * chainA})`; ctx.lineWidth = 1.5;
       ctx.beginPath();
       ctx.moveTo(pen[0], ex[1]); ctx.lineTo(pen[0], pen[1]);
@@ -914,7 +1024,7 @@ function frame() {
       ctx.save(); ctx.shadowColor = "rgba(255,255,255,0.9)"; ctx.shadowBlur = 16;
       ctx.beginPath(); ctx.arc(pen[0], pen[1], 6.5, 0, TAU);
       ctx.fillStyle = `rgba(255,255,255,${chainA})`; ctx.fill(); ctx.restore();
-    } else if (F.raw) drawTrace(sd, M - 1, fcx, fcy, s, 1, 0);
+    } else if (keepLine) drawTrace(sd, M - 1, fcx, fcy, s, 1, 0);
     const a1 = mode === "stage" ? 1 : 1 - Math.min(1, u * 2.2);
     runs([{ t: "N", f: `italic 52px ${SANS}`, c: "#ff6652" }, { t: " = " + N, f: `52px ${SANS}`, c: "#ff6652" }], 1064, a1);
     text(`error = ${fmtErr(sd.err, 2)}%`, 360, 1148, `38px ${SERIF}`, "#f4f4f4", a1);
@@ -1317,7 +1427,7 @@ $("shareApp").onclick = () => {
 };
 
 /* ---------- image upload (button, drag & drop, paste) ---------- */
-let curImg = null, curName = "image", curMode = "auto";
+let curImg = null, curName = "image", curMode = "orig";
 function processImage() {
   if (!curImg) return;
   setStatus(tr("tracing"), true);
@@ -1326,8 +1436,7 @@ function processImage() {
       const detail = +$("detail").value;
       let f = null;
       if (curMode === "color") f = traceColors(curImg, curName, true);
-      else if (curMode === "auto") f = traceColors(curImg, curName, false);
-      if (!f) f = traceEdges(curImg, curName, detail);
+      else { f = traceEdges(curImg, curName, detail); f.showImg = curMode === "orig"; }
       $("traceCard").hidden = false;
       loadFlag(f);
       setStatus(tr(f.raw ? "done_edge" : "done_color"), true);
@@ -1344,8 +1453,8 @@ function handleFile(file) {
     img.onload = () => {
       curImg = img;
       curName = (file.name || "image").replace(/\.[^.]+$/, "").slice(0, 26) || "image";
-      curMode = "auto";
-      document.querySelectorAll("#seg button").forEach(b => b.classList.toggle("on", b.dataset.m === "auto"));
+      curMode = "orig";
+      document.querySelectorAll("#seg button").forEach(b => b.classList.toggle("on", b.dataset.m === "orig"));
       processImage();
     };
     img.onerror = () => setStatus(tr("err") + ": " + tr("bad_format"));
@@ -1531,4 +1640,4 @@ requestAnimationFrame(t => { last = t; tick(t); });
 loadFlag(FLAGS[0]);
 </script>
 </body>
-</html>
+        </html>
