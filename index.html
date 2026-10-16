@@ -124,7 +124,7 @@ input.cs::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:#
         <button data-m="edge"><b data-i="edge"></b><small data-i="edge_d"></small></button>
       </div>
       <div class="opt"><h4 data-i="detail"></h4><p data-i="detail_d"></p>
-        <div class="timeline"><input type="range" id="detail" min="0" max="100" value="37" aria-label="Detail"><span id="detailVal" style="min-width:52px;text-align:right">4500</span></div></div>
+        <div class="timeline"><input type="range" id="detail" min="0" max="100" value="26" aria-label="Detail"><span id="detailVal" style="min-width:52px;text-align:right">4500</span></div></div>
     </section>
 
     <section class="card">
@@ -209,7 +209,7 @@ const UPLOAD_URL = CFG.UPLOAD_URL || "";  // Cloudflare Worker manzili (videoni 
 let lang = "uz", lineMode = "#f5f5f5", wmText = "", bgId = "night", sizeMul = 1;
 
 const I18N = {
-  uz: { size: "🔍 Kattalik", look_title: "🎨 Ko'rinish", bg_t: "Orqa fon", bg_d: "Animatsiya va videoning orqa fonini tanlang.",
+  uz: { fallback: "Telefon xotirasi yetmadi — Detal 20000 ga tushirildi", size: "🔍 Kattalik", look_title: "🎨 Ko'rinish", bg_t: "Orqa fon", bg_d: "Animatsiya va videoning orqa fonini tanlang.",
     tune_off: "O'chiq", tune_file: "Mening qo'shig'im", share: "Botni do'stlarga ulashish",
     res_send: "🤖 Botga yuborish", sending: "Yuborilmoqda… (video katta bo'lsa biroz kuting)",
     sent_ok: "Yuborildi ✅ Endi botdagi chatni oching: videoni bosib turing → “Galereyaga saqlash”.",
@@ -220,7 +220,7 @@ const I18N = {
     upload: "Rasm yuklash", upload_sub: "Telefondagi istalgan rasm chiziladi", rec: "Videoga olish", png: "Rasmga olish",
     save_note: "Video musiqa bilan real vaqtda yoziladi (~35 soniya). Tugagach “Saqlash” oynasi chiqadi.",
     how_title: "Rasm qanday chizilsin?", orig: "Asl rasm", orig_d: "oxirida haqiqiy rasm chiqadi", color: "Ranglar", color_d: "o'rtada aniqlangan ranglar (bayroq, logo)", edge: "Chiziq", edge_d: "oxirida faqat chiziq qoladi",
-    detail: "Detal", detail_d: "Ko'proq = batafsilroq va aniqroq, lekin sekinroq (“Asl rasm” va “Chiziq” rejimlarida). 30000 gacha: juda yuqori qiymatda telefon bir necha soniya o'ylanadi.",
+    detail: "Detal", detail_d: "Ko'proq = batafsilroq va aniqroq, lekin sekinroq (“Asl rasm” va “Chiziq” rejimlarida). 100000 gacha: yuqori qiymatda telefon bir necha soniya o'ylanadi, 50000 dan oshganda ancha uzoq (yarim daqiqagacha) va ko'p xotira ketadi.",
     flags_title: "Tayyor bayroqlar",
     settings: "⚙ Sozlamalar", linecolor: "🎨 Chiziq rangi", linecolor_d: "Rasm qaysi rangda chizilishini tanlang. Oxirgi doira — o'z rangingizni yasaysiz.",
     music: "🎵 Musiqa", music_d: "Qo'shiqni tanlang — animatsiya shu musiqa bilan boshidan boshlanadi va video ham musiqa bilan yoziladi. O'z qo'shig'ingizni ham yuklash mumkin.",
@@ -237,7 +237,7 @@ const I18N = {
     rec_unsup: "Bu qurilmada video yozish ishlamaydi", rec_nofmt: "Bu qurilmada video formati topilmadi", rec_prog: "Yozilmoqda… {p}% (sahifani yopmang)",
     share_text: "Rasmni aylanuvchi doiralar bilan chizdiring ✨",
     E_NOCOLOR: "Rangli joylar topilmadi", E_NOCONTOUR: "Kontur topilmadi", E_FLAT: "Chiziqlar topilmadi — rasm juda tekis", E_NOLINES: "Chiziqlar topilmadi", E_JSON: "w, h va shapes kerak" },
-  ru: { size: "🔍 Размер", look_title: "🎨 Вид", bg_t: "Фон", bg_d: "Выберите фон анимации и видео.",
+  ru: { fallback: "Не хватило памяти телефона — Детали снижены до 20000", size: "🔍 Размер", look_title: "🎨 Вид", bg_t: "Фон", bg_d: "Выберите фон анимации и видео.",
     tune_off: "Выкл", tune_file: "Моя песня", share: "Поделиться ботом с друзьями",
     res_send: "🤖 Отправить боту", sending: "Отправляю… (подождите, если видео большое)",
     sent_ok: "Отправлено ✅ Откройте чат с ботом: зажмите видео → «Сохранить в галерею».",
@@ -248,7 +248,7 @@ const I18N = {
     upload: "Загрузить картинку", upload_sub: "Любая картинка с телефона будет нарисована", rec: "Записать видео", png: "Сохранить фото",
     save_note: "Видео пишется в реальном времени с музыкой (~35 сек). Потом откроется окно «Сохранить».",
     how_title: "Как рисовать картинку?", orig: "Оригинал", orig_d: "в конце — настоящее фото", color: "Цвета", color_d: "найденные цвета (флаги, логотипы)", edge: "Линия", edge_d: "в конце остаётся только линия",
-    detail: "Детали", detail_d: "Больше = подробнее и точнее, но медленнее (режимы «Оригинал» и «Линия»). До 30000: на очень высоких значениях телефон думает несколько секунд.",
+    detail: "Детали", detail_d: "Больше = подробнее и точнее, но медленнее (режимы «Оригинал» и «Линия»). До 100000: на высоких значениях телефон думает несколько секунд, выше 50000 — заметно дольше (до полуминуты) и нужно много памяти.",
     flags_title: "Готовые флаги",
     settings: "⚙ Настройки", linecolor: "🎨 Цвет линии", linecolor_d: "Каким цветом рисовать. Последний круг — создайте свой цвет.",
     music: "🎵 Музыка", music_d: "Выберите мелодию — анимация начнётся сначала с этой музыкой, и видео запишется с ней. Можно загрузить свою песню.",
@@ -265,7 +265,7 @@ const I18N = {
     rec_unsup: "Запись видео не поддерживается", rec_nofmt: "Формат видео не найден", rec_prog: "Запись… {p}% (не закрывайте страницу)",
     share_text: "Нарисуй любую картинку вращающимися кругами ✨",
     E_NOCOLOR: "Цветные области не найдены", E_NOCONTOUR: "Контур не найден", E_FLAT: "Линии не найдены — картинка слишком ровная", E_NOLINES: "Линии не найдены", E_JSON: "нужны w, h и shapes" },
-  en: { size: "🔍 Size", look_title: "🎨 Look", bg_t: "Background", bg_d: "Pick the background of the animation and video.",
+  en: { fallback: "Not enough phone memory — Detail lowered to 20000", size: "🔍 Size", look_title: "🎨 Look", bg_t: "Background", bg_d: "Pick the background of the animation and video.",
     tune_off: "Off", tune_file: "My song", share: "Share the bot with friends",
     res_send: "🤖 Send to the bot", sending: "Sending… (wait a bit if the video is big)",
     sent_ok: "Sent ✅ Now open the chat with the bot: press and hold the video → “Save to gallery”.",
@@ -276,7 +276,7 @@ const I18N = {
     upload: "Upload a picture", upload_sub: "Any picture from your phone gets drawn", rec: "Record video", png: "Save picture",
     save_note: "The video is recorded live with music (~35 s). A “Save” window opens when it ends.",
     how_title: "How should it be drawn?", orig: "Original", orig_d: "the real picture appears at the end", color: "Colors", color_d: "detected colors (flags, logos)", edge: "Line", edge_d: "only the line remains at the end",
-    detail: "Detail", detail_d: "More = more detailed and exact, but slower (“Original” and “Line” modes). Up to 30000: very high values make the phone think for a few seconds.",
+    detail: "Detail", detail_d: "More = more detailed and exact, but slower (“Original” and “Line” modes). Up to 100000: high values make the phone think for a few seconds, above 50000 much longer (up to half a minute) and it needs a lot of memory.",
     flags_title: "Ready-made flags",
     settings: "⚙ Settings", linecolor: "🎨 Line color", linecolor_d: "Pick the drawing color. The last circle lets you create your own.",
     music: "🎵 Music", music_d: "Pick a tune — the animation restarts with it and the video is recorded with it. You can also upload your own song.",
@@ -680,13 +680,14 @@ function smoothPoly(p) {
   return o;
 }
 function traceEdges(img, name, target) {
-  const side = Math.min(1100, Math.max(400, Math.round(Math.sqrt(target) * 6 / 50) * 50));
+  const s6 = Math.sqrt(target) * 6, sideRaw = s6 <= 1100 ? s6 : 1100 + (s6 - 1100) * 0.5;
+  const side = Math.min(1500, Math.max(400, Math.round(sideRaw / 50) * 50));
   const { W, H, d } = rasterize(img, side), n = W * H;
   const gray = new Float32Array(n);
   for (let i = 0; i < n; i++) gray[i] = 0.299 * d[i * 4] + 0.587 * d[i * 4 + 1] + 0.114 * d[i * 4 + 2];
   // local contrast normalisation: dark areas (hair, shadows) get as much detail as bright ones
   const R = Math.max(8, Math.round(Math.max(W, H) * 0.03)), iw = W + 1;
-  const S1 = new Float64Array(iw * (H + 1)), S2 = new Float64Array(iw * (H + 1));
+  let S1 = new Float64Array(iw * (H + 1)), S2 = new Float64Array(iw * (H + 1));
   for (let y = 0; y < H; y++) {
     let r1 = 0, r2 = 0;
     for (let x = 0; x < W; x++) {
@@ -705,6 +706,7 @@ function traceEdges(img, name, target) {
       lcn[y * W + x] = (gray[y * W + x] - mu) / (sd + 14) * 50;
     }
   }
+  S1 = S2 = null;
   const bl = gauss5(lcn, W, H);
   const mag = new Float32Array(n), dir = new Uint8Array(n);
   let maxMag = 0;
@@ -818,8 +820,8 @@ function traceEdges(img, name, target) {
   for (let i = 1; i < raw.length; i++) Lu += Math.hypot(raw[i][0] - raw[i - 1][0], raw[i][1] - raw[i - 1][1]);
   const pxLen = Lu * H / 2;
   let MM = 16384;
-  while (MM < 2.2 * pxLen && MM < 65536) MM *= 2;
-  const kmax = Math.min(MM / 2 - 1, 20000, Math.max(4000, Math.round(pxLen / 2.2)));
+  while (MM < 2.2 * pxLen && MM < 262144) MM *= 2;
+  const kmax = Math.min(MM / 2 - 1, 60000, Math.max(4000, Math.round(pxLen / 2.2)));
   return { name, title: "Drawing " + name, w: fw, h: fh, bg: "#ffffff", img, free: true, raw, shapes: [], M: MM, kmax,
     desc: "edges of a picture, one line of spinning circles" };
 }
@@ -894,29 +896,56 @@ function drawChain(circ, t, ox, oy, axis, color, alpha, s) {
   }
   return [x, y];
 }
+const TL = { cs: [null, null, null], xs: [null, null, null], key: "", sd: null, k: 0 };
+function traceLayers() {
+  const w = cv.width, h = cv.height;
+  if (!TL.cs[0] || TL.cs[0].width !== w || TL.cs[0].height !== h) {
+    for (let i = 0; i < 3; i++) {
+      const c = document.createElement("canvas"); c.width = w; c.height = h;
+      TL.cs[i] = c; TL.xs[i] = c.getContext("2d");
+    }
+    TL.key = "";
+  }
+}
+// The line is painted once into three layers (grey links / red frame / lines) and only new
+// pieces are added each frame, so even a 100000-detail picture animates smoothly.
 function drawTrace(sd, f, fcx, fcy, s, alpha, jumpA = 1) {
-  const ST = Math.max(1, Math.round(M / (F.raw ? 16384 : 8192))), lab = F._d.lab, xs = sd.xs, ys = sd.ys;
-  const n = Math.min(M - 1, Math.floor(f)), nS = Math.min(M / ST - 1, Math.floor(f / ST));
+  const ST = Math.max(1, Math.round(M / 65536)), lab = F._d.lab, xs = sd.xs, ys = sd.ys;
+  const n = Math.min(M - 1, Math.floor(f)), nS = Math.min(Math.floor((M - 1) / ST), Math.floor(f / ST));
   const fr = f - n, nx = (n + 1) % M;
   const px = xs[n] + (xs[nx] - xs[n]) * fr, py = ys[n] + (ys[nx] - ys[n]) * fr;
-  ctx.save(); ctx.lineJoin = "round"; ctx.lineCap = "round";
+  traceLayers();
+  const key = flagSerial + "|" + s.toFixed(4) + "|" + fcx.toFixed(2) + "|" + fcy.toFixed(2) + "|" + cv.width + "|" + lineMode;
+  if (TL.sd !== sd || TL.key !== key || nS < TL.k) {
+    for (const x of TL.xs) { x.setTransform(1, 0, 0, 1, 0, 0); x.clearRect(0, 0, cv.width, cv.height); }
+    TL.sd = sd; TL.key = key; TL.k = 0;
+  }
   const P = k => [fcx + xs[k * ST] * s, fcy + ys[k * ST] * s], Lb = k => lab[k * ST];
   const col = (l, i) => l === 2 ? DIM : l ? (lineMode === "rainbow" ? `hsl(${(i / M * 720) % 360},85%,66%)` : lineMode) : RED;
   const wid = l => l === 2 ? 1.2 : (F.raw ? 2.4 : 4.5);
-  const al = l => alpha * (l === 2 ? 0.22 * jumpA : 1);
-  let k = 0;
+  let k = TL.k;
   while (k < nS) {
-    let j = k; const l = Lb(k);
-    ctx.beginPath(); ctx.moveTo(...P(k));
-    while (j < nS && Lb(j + 1) === l && !(lineMode === "rainbow" && l === 1 && j - k >= 20)) { j++; ctx.lineTo(...P(j)); }
-    if (j < nS) { j++; ctx.lineTo(...P(j)); }
-    ctx.globalAlpha = al(l);
-    ctx.strokeStyle = col(l, k * ST); ctx.lineWidth = wid(l); ctx.stroke();
+    let j = k; const l = Lb(k), x = TL.xs[l];
+    x.setTransform(kScale, 0, 0, kScale, 0, 0); x.lineJoin = "round"; x.lineCap = "round";
+    x.beginPath(); x.moveTo(...P(k));
+    while (j < nS && Lb(j + 1) === l && !(lineMode === "rainbow" && l === 1 && j - k >= 20)) { j++; x.lineTo(...P(j)); }
+    if (j < nS) { j++; x.lineTo(...P(j)); }
+    x.strokeStyle = col(l, k * ST); x.lineWidth = wid(l); x.stroke();
     k = j > k ? j : k + 1;
   }
-  ctx.beginPath(); ctx.moveTo(...P(nS)); ctx.lineTo(fcx + px * s, fcy + py * s);
-  ctx.globalAlpha = al(lab[n]);
-  ctx.strokeStyle = col(lab[n], n); ctx.lineWidth = wid(lab[n]); ctx.stroke();
+  TL.k = k;
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
+  for (const l of [2, 0, 1]) {
+    const a = alpha * (l === 2 ? 0.22 * jumpA : 1);
+    if (a > 0.003) { ctx.globalAlpha = a; ctx.drawImage(TL.cs[l], 0, 0); }
+  }
+  ctx.restore();
+  // the short piece between the last painted point and the pen
+  ctx.save(); ctx.lineJoin = "round"; ctx.lineCap = "round";
+  const l0 = lab[n];
+  ctx.globalAlpha = alpha * (l0 === 2 ? 0.22 * jumpA : 1);
+  ctx.strokeStyle = col(l0, n); ctx.lineWidth = wid(l0);
+  ctx.beginPath(); ctx.moveTo(...P(nS)); ctx.lineTo(fcx + px * s, fcy + py * s); ctx.stroke();
   ctx.restore();
   return [fcx + px * s, fcy + py * s];
 }
@@ -1251,7 +1280,8 @@ function loadFlag(f) {
   setM(f.M || 16384);
   F = buildFlag(f);
   flagSerial++;
-  STAGES = f.free ? [1, 3, 10, 50, 200, 800, 2500, Math.max(3000, F._d.km)] : STAGES_FLAG;
+  const km = Math.max(3000, F._d.km), g = Math.pow(km / 200, 1 / 3);
+  STAGES = f.free ? [1, 3, 10, 50, 200, Math.round(200 * g), Math.round(200 * g * g), km] : STAGES_FLAG;
   TOTAL = INTRO + STAGES.length * STAGE_T + TRANS;
   music._ev = null;
   T = 0; playing = true; setPlayUI(true); syncMusic();
@@ -1449,12 +1479,19 @@ function processImage() {
   setTimeout(() => {
     try {
       const detail = detailFrom(+$("detail").value);
-      let f = null;
+      let f = null, fellBack = false;
       if (curMode === "color") f = traceColors(curImg, curName, true);
-      else { f = traceEdges(curImg, curName, detail); f.showImg = curMode === "orig"; }
+      else {
+        try { f = traceEdges(curImg, curName, detail); }
+        catch (err) {
+          if (/^E_/.test(String(err && err.message)) || detail <= 20000) throw err;
+          f = traceEdges(curImg, curName, 20000); fellBack = true;      // phone ran out of memory: retry smaller
+        }
+        f.showImg = curMode === "orig";
+      }
       $("traceCard").hidden = false;
       loadFlag(f);
-      setStatus(tr(f.raw ? "done_edge" : "done_color"), true);
+      setStatus(fellBack ? tr("fallback") : tr(f.raw ? "done_edge" : "done_color"), !fellBack);
     } catch (err) { setStatus(errText(err)); }
   }, 40);
 }
@@ -1492,7 +1529,7 @@ $("seg").addEventListener("click", ev => {
   processImage();
 });
 let detailTimer = 0;
-const detailFrom = v => Math.round(1500 * Math.pow(20, v / 100) / 100) * 100;
+const detailFrom = v => Math.round(1500 * Math.pow(100000 / 1500, v / 100) / 100) * 100;
 $("detail").addEventListener("input", () => { $("detailVal").textContent = detailFrom(+$("detail").value); clearTimeout(detailTimer); detailTimer = setTimeout(() => { if (curMode !== "color") processImage(); }, 350); });
 
 /* ---------- output: video / PNG -> sent to the bot chat (or saved) ---------- */
@@ -1657,4 +1694,4 @@ requestAnimationFrame(t => { last = t; tick(t); });
 loadFlag(FLAGS[0]);
 </script>
 </body>
-  </html>
+</html>
